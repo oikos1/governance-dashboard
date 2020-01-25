@@ -12,7 +12,11 @@ import Withdraw from './Withdraw';
 import { modalOpen } from '../../reducers/modal';
 import HotColdTable from './shared/HotColdTable';
 import { formatRound } from '../../utils/misc';
+import { loadContract } from '../../utils/ethereum';
+
 import { ETH } from '../../chain/maker';
+
+const mainnetAddresses = require('../../chain/addresses/mainnet.json');
 
 class BreakLink extends Component {
   constructor(props) {
@@ -27,14 +31,15 @@ class BreakLink extends Component {
     const isColdWallet = account.proxyRole === 'cold';
     const coldAddress = isColdWallet ? account.address : linkedAccount.address;
     const hotAddress = isColdWallet ? linkedAccount.address : account.address;
-    const ethToken = window.maker.getToken(ETH);
+    const ethToken = await loadContract(mainnetAddresses['GOV']); //window.maker.getToken(ETH);
     const [ethHot, ethCold] = await Promise.all([
-      ethToken.balanceOf(hotAddress),
-      ethToken.balanceOf(coldAddress)
+      ethToken.balanceOf(hotAddress).call(),
+      ethToken.balanceOf(coldAddress).call()
     ]);
+    console.log('got ethHot', ethHot, 'ethCold', ethCold);
     this.setState({
-      ethHot: formatRound(ethHot.toNumber(), 3),
-      ethCold: formatRound(ethCold.toNumber(), 3)
+      ethHot: formatRound(ethHot, 3),
+      ethCold: formatRound(ethCold, 3)
     });
   }
 
@@ -159,7 +164,6 @@ const mapStateToProps = state => ({
   txStatus: state.proxy.breakLinkTxStatus
 });
 
-export default connect(
-  mapStateToProps,
-  { breakLink, modalClose, modalOpen }
-)(BreakLink);
+export default connect(mapStateToProps, { breakLink, modalClose, modalOpen })(
+  BreakLink
+);

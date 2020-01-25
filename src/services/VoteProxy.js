@@ -35,11 +35,11 @@ const voteExec = (proxyAddress, picks) => {
 // Reads ------------------------------------------------
 
 export const getVotedProposalAddresses = async proxyAddress => {
-  const x = await loadContract(mainnetAddresses['CHIEF']);
+  //const x = await loadContract(mainnetAddresses['CHIEF']);
   //console.log("got x", x)
-  const _slate = await getVotedSlate(proxyAddress).call();
+  const _slate = await getVotedSlate(proxyAddress);
 
-  return getSlateAddresses(_slate).call();
+  return await getSlateAddresses(_slate);
 };
 
 export const getVoteProxy = async addressToCheck => {

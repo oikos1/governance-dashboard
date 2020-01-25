@@ -5,6 +5,7 @@ import { formatRound, check } from '../utils/misc';
 import { addToastWithTimeout, ToastTypes } from './toasts';
 import { TransactionStatus } from '../utils/constants';
 import { generateIPFSHash } from '../utils/ipfs';
+import { getAllWhitelistedPolls } from '../services/GovPolling';
 
 // Constants ----------------------------------------------
 
@@ -117,9 +118,9 @@ export const withdrawVoteForPoll = pollId => async dispatch => {
 // Reads ---
 
 const getAllWhiteListedPolls = async () => {
-  const pollsList = await window.maker
-    .service('govPolling')
-    .getAllWhitelistedPolls();
+  const pollsList = //await window.maker
+    //.service('govPolling')
+    getAllWhitelistedPolls();
 
   const uniqPolls = uniqBy(pollsList, p => p.multiHash);
   // Don't process polls where startDate is in the future

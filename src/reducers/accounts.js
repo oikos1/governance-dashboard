@@ -133,23 +133,20 @@ export const addAccounts = accounts => async dispatch => {
 
     if (hasProxy) {
       //const chiefService = window.maker.service('chief');
-      /*currProposal = currProposal
-        .then(() =>
+      currProposal = currProposal
+        .then(() => {
           promiseRetry({
-            fn: () => getVotedProposalAddresses()
-          })
-        )
-        .then(addresses => {
-          console.log("got addresses", addresses);
+            fn: () => getVotedProposalAddresses(voteProxy)
+          });
           return;
-          (addresses || []).map(address => address.toLowerCase())
+        })
+        .then(addresses => {
+          console.log('got addresses', addresses);
+          (addresses || []).map(address => address.toLowerCase());
         });
-      mkrLockedChiefHot = (
-        await getNumDeposits(hotAddress)
-      ).toNumber();
-      mkrLockedChiefCold = (
-        await getNumDeposits(coldAddress)
-      ).toNumber();*/
+
+      mkrLockedChiefHot = (await getNumDeposits(hotAddress)).toNumber();
+      mkrLockedChiefCold = (await getNumDeposits(coldAddress)).toNumber();
     }
 
     const chiefAddress = mainnetAddresses['CHIEF']; //window.maker
@@ -166,7 +163,7 @@ export const addAccounts = accounts => async dispatch => {
       return {
         proxyRole: otherRole,
         address: linkedAddress,
-        mkrBalance: mkrBalance.v.toString()
+        mkrBalance: mkrBalance
       };
     };
 
@@ -198,7 +195,7 @@ export const addAccounts = accounts => async dispatch => {
             linkedAccount: {
               proxyRole: 'hot',
               address: hotAddress,
-              mkrBalance: 0
+              mkrBalance: await mkrToken.balanceOf(voteProxy).call()
             } //linkedAccountData()
           })
         : {

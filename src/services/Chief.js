@@ -16,7 +16,7 @@ const getLockLogs = async () => {
 
   console.log('getting events for contract', chiefAddress);
 
-  for (var i = 1; i <= 10; i++) {
+  for (var i = 1; i <= 1; i++) {
     tronGrid.contract
       .getEvents(chiefAddress, { event_name: 'LogNote', block_number: i })
       .then(locks => {
@@ -130,14 +130,13 @@ export const getHat = () => {
 
 export const getSlateAddresses = async (slateHash, i = 0) => {
   const x = await loadContract(mainnetAddresses['CHIEF']);
-
-  try {
-    return [await x.slates(slateHash, i)].concat(
-      await getSlateAddresses(slateHash, i + 1)
-    );
-  } catch (_) {
-    return [];
-  }
+  const y = await x.slates(slateHash, i);
+  const z = await getSlateAddresses(slateHash, i + 1);
+  // try {
+  return [y].concat(z);
+  //} catch (_) {
+  //   return [];
+  //}
 };
 
 export const getLockAddressLogs = () => {
