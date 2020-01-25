@@ -13,20 +13,22 @@ const APPROVALS_FAILURE = 'approvals/FAILURE';
 
 export const initApprovalsFetch = () => (dispatch, getState) => {
   const proposals = getState().proposals;
+
   if (!proposals || proposals.length === 0)
     throw new Error('cannot get approvals before we have the topics');
   dispatch({ type: APPROVALS_REQUEST });
   Promise.all(
-    proposals.map(({ source }) =>
-      toNum(window.maker.service('chief').getApprovalCount(source)).then(
-        approvals => ({
-          [source]: approvals
-        })
-      )
-    )
+    proposals.map(({ source }) => {
+      console.log('got source', source);
+      //toNum(window.maker.service('chief').getApprovalCount(source)).then(
+      //  approvals => ({
+      //    [source]: approvals
+      //  })
+      //)
+    })
   )
     .then(approvals => {
-      let total = 0;
+      /*let total = 0;
       const approvalsObj = {};
       for (let approval of approvals) {
         const [address, amt] = Object.entries(approval)[0];
@@ -34,7 +36,7 @@ export const initApprovalsFetch = () => (dispatch, getState) => {
         approvalsObj[address.toLowerCase()] = round(amt, 2);
       }
       total = round(total, 2);
-      dispatch({ type: APPROVALS_SUCCESS, payload: { approvalsObj, total } });
+      dispatch({ type: APPROVALS_SUCCESS, payload: { approvalsObj, total } });*/
     })
     .catch(error => {
       // TODO: notify user or throw to a fallback component

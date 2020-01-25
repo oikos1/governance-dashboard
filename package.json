@@ -42,10 +42,12 @@
     "redux-devtools-extension": "^2.13.5",
     "redux-thunk": "^2.3.0",
     "showdown": "^1.9.0",
-    "styled-components": "^5.0.0"
+    "styled-components": "^5.0.0",
+    "trongrid": "^1.2.4",
+    "tronweb": "^2.10.1"
   },
   "scripts": {
-    "start": "HTTPS=true NODE_ENV=development craco start",
+    "start": "HTTPS=false NODE_ENV=development craco start",
     "build": "CI=false craco build",
     "now-build": "yarn build",
     "deploy": "yarn build && now ./build -A ../now.json",

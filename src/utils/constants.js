@@ -1,3 +1,5 @@
+import { createCurrency } from '@makerdao/currency';
+
 export const AccountTypes = {
   LEDGER: 'ledger',
   TREZOR: 'trezor',
@@ -46,3 +48,14 @@ const expr = /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.
 export const URL_REGEX = new RegExp(expr);
 
 export const MIN_MKR_PERCENTAGE = 0.01;
+
+export const MKR = createCurrency('MKR');
+export const IOU = createCurrency('IOU');
+export const VOTE_PROXY_FACTORY = 'VOTE_PROXY_FACTORY';
+export const POLLING = 'POLLING';
+export const ESM = 'ESM';
+export const END = 'END';
+export const PAUSE = 'PAUSE';
+
+/* Addresses */
+export const ZERO_ADDRESS = '410000000000000000000000000000000000000000';

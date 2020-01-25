@@ -64,26 +64,30 @@ export const pollForMetamaskChanges = () => async dispatch => {
     await dispatch(initWeb3Accounts());
     await dispatch(checkNetwork());
 
-    setTimeout(() => dispatch(pollForMetamaskChanges()), 1000);
+    setTimeout(() => dispatch(pollForMetamaskChanges()), 3000);
   } catch (err) {
     console.error(err);
   }
 };
 
 export const checkNetwork = () => async (dispatch, getState) => {
-  if (window.web3 && window.web3.eth.defaultAccount) {
-    window.web3.version.getNetwork(async (err, netId) => {
-      const {
-        metamask: { network }
-      } = getState();
-      const newNetwork = netIdToName(netId);
-      if (newNetwork !== network) {
-        // When we remove the reload, we want to remember to update the network.
-        // Dispatch kept here to prevent silly errors in the future.
-        dispatch(updateNetwork(newNetwork));
-        window.location.reload();
-      }
-    });
+  if (
+    window.tronWeb &&
+    window.tronWeb
+      .defaultAddress /*window.web3 && window.web3.eth.defaultAccount*/
+  ) {
+    //window.web3.version.getNetwork(async (err, netId) => {
+    const {
+      metamask: { network }
+    } = getState();
+    const newNetwork = 'mainnet'; //netIdToName(netId);
+    if (newNetwork !== network) {
+      // When we remove the reload, we want to remember to update the network.
+      // Dispatch kept here to prevent silly errors in the future.
+      dispatch(updateNetwork(newNetwork));
+      window.location.reload();
+    }
+    //});
   }
 };
 
@@ -96,7 +100,7 @@ export const initWeb3Accounts = () => async (dispatch, getState) => {
   } = getState();
 
   async function useAddress() {
-    const address = window.web3.eth.defaultAccount;
+    const address = window.tronWeb.defaultAddress.hex; //window.web3.eth.defaultAccount;
     if (address !== activeAddress) {
       dispatch(updateAddress(address));
       await dispatch(addMetamaskAccount(address));
@@ -111,9 +115,13 @@ export const initWeb3Accounts = () => async (dispatch, getState) => {
     }
   }
 
-  if (window.web3 && window.web3.eth.defaultAccount) {
+  if (
+    window.tronWeb &&
+    window.tronWeb
+      .defaultAddress /*window.web3 && window.web3.eth.defaultAccount*/
+  ) {
     await useAddress();
-  } else if (window.ethereum && !triedEnabling) {
+  } /* else if (window.ethereum && !triedEnabling) {
     triedEnabling = true;
     try {
       await window.ethereum.enable();
@@ -122,7 +130,10 @@ export const initWeb3Accounts = () => async (dispatch, getState) => {
       dispatch({ type: NO_METAMASK_ACCOUNTS });
       dispatch(notAvailable());
     }
-  } else if (fetching && !activeAddress) {
+  } */ else if (
+    fetching &&
+    !activeAddress
+  ) {
     dispatch({ type: NO_METAMASK_ACCOUNTS });
     dispatch(notAvailable());
   }
@@ -131,7 +142,11 @@ export const initWeb3Accounts = () => async (dispatch, getState) => {
 export const init = (maker, network = 'mainnet') => async dispatch => {
   dispatch(connectRequest());
 
-  if (!window.web3 || !window.web3.eth.defaultAccount) {
+  if (
+    !window.tronWeb &&
+    !window.tronWeb
+      .defaultAddress /*!window.web3 || !window.web3.eth.defaultAccount*/
+  ) {
     dispatch({ type: NO_METAMASK_ACCOUNTS });
     dispatch(notAvailable());
   }
@@ -140,10 +155,10 @@ export const init = (maker, network = 'mainnet') => async dispatch => {
   dispatch(updateMaker(maker));
   dispatch(voteTallyInit());
   dispatch(proposalsInit(network));
-  dispatch(hatInit());
-  dispatch(ethInit());
-  dispatch(pollsInit());
-  dispatch(esmInit());
+  //dispatch(hatInit());
+  //dispatch(ethInit());
+  //dispatch(pollsInit());
+  //dispatch(esmInit());
   await dispatch(initWeb3Accounts());
   dispatch(pollForMetamaskChanges());
 };

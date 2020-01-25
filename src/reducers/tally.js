@@ -1,6 +1,6 @@
 import { createReducer } from '../utils/redux';
 import { promiseRetry } from '../utils/misc';
-
+import { getVoteTally } from '../services/Chief';
 // Constants ----------------------------------------------
 
 export const TALLY_REQUEST = 'voteTally/TALLY_REQUEST';
@@ -11,15 +11,17 @@ export const TALLY_UPDATE = 'voteTally/TALLY_UPDATE';
 // Actions ------------------------------------------------
 
 export const voteTallyInit = () => dispatch => {
-  const service = window.maker.service('chief');
+  //const service = window.maker.service('chief');
+  //console.log("got chief", service)
   dispatch({ type: TALLY_REQUEST });
   return (
     promiseRetry({
       times: 3,
-      fn: service.getVoteTally.bind(service),
+      fn: getVoteTally,
       delay: 500
     })
       .then(tally => {
+        console.log('got tally', tally);
         dispatch({ type: TALLY_SUCCESS, payload: { tally } });
       })
       // sometimes this fails when we're reading event logs

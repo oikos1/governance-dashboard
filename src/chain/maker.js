@@ -23,36 +23,34 @@ export default async function createMaker(
     }
   };
 
-  if (useMcdKovanContracts) {
-    const MKR = createCurrency('MKR');
-    const IOU = createCurrency('IOU');
-    const kovanMcdAddresses = require('./addresses/kovan-mcd.json');
-    const addContracts = Object.keys(kovanMcdAddresses).reduce(
-      (result, key) => {
-        result[key] = { address: { kovan: kovanMcdAddresses[key] } };
-        return result;
+  //if (useMcdKovanContracts) {
+  const MKR = createCurrency('MKR');
+  const IOU = createCurrency('IOU');
+
+  const mainnetAddresses = require('./addresses/mainnet.json');
+  const addContracts = Object.keys(mainnetAddresses).reduce((result, key) => {
+    result[key] = { address: { mainnet: mainnetAddresses[key] } };
+    return result;
+  }, {});
+
+  const token = {
+    erc20: [
+      {
+        currency: MKR,
+        symbol: MKR.symbol,
+        address: mainnetAddresses.GOV
       },
-      {}
-    );
+      {
+        currency: IOU,
+        symbol: IOU.symbol,
+        address: mainnetAddresses.IOU
+      }
+    ]
+  };
 
-    const token = {
-      erc20: [
-        {
-          currency: MKR,
-          symbol: MKR.symbol,
-          address: kovanMcdAddresses.GOV
-        },
-        {
-          currency: IOU,
-          symbol: IOU.symbol,
-          address: kovanMcdAddresses.IOU
-        }
-      ]
-    };
-
-    config.smartContract = { addContracts };
-    config.token = token;
-  }
+  config.smartContract = { addContracts };
+  config.token = token;
+  //}
 
   // Use the config plugin, if we have a testchainConfigId
   if (testchainConfigId) {
@@ -63,7 +61,7 @@ export default async function createMaker(
     ]);
   }
 
-  return Maker.create('http', config);
+  return; //Maker.create('http', config);
 }
 
 export { ETH, MKR };

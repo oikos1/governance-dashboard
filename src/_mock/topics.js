@@ -73,8 +73,8 @@ export default [
           '{"mainnet":"0x6091295974c12c4305b8bf6d2062bf48f37a3b36","kovan":"0x0c0fC0952790A96D60CD82cA865C7bb1233477C3","ganache":"0x0c0fC0952790A96D60CD82cA865C7bb1233477C3"}',
         end_timestamp: 1535606394000,
         proposal_blurb:
-          'Vote for this proposal to approve an increase in the governance fee to 2.5% per year',
-        title: 'Raise the governance fee to 2.5% / year',
+          'Vote for this proposal to approve an increase in the governance fee to 13.337% per year',
+        title: 'Raise the governance fee to 13.337% / year',
         documents: [],
         submitted_by: { link: 'https://makerdao.com/', name: 'Dai Foundation' },
         verified: true,

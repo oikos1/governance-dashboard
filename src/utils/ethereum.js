@@ -1,5 +1,6 @@
 import BigNumber from 'bignumber.js';
 import takeLast from 'ramda/src/takeLast';
+import { tronWeb, tronGrid } from '../chain/tronweb';
 
 BigNumber.config({ DECIMAL_PLACES: 18, ROUNDING_MODE: 1 });
 export const INFURA_PROJECT_ID = '912c79d091a74c6a8c0938c3bd2319a0';
@@ -10,6 +11,9 @@ export const ETHER = 1000000000000000000;
 export const MAX_UINT = `0x${Array(64 + 1).join('f')}`;
 export const MAX_UINT_ETH_BN = BigNumber(MAX_UINT).shiftedBy(-18);
 
+export const loadContract = async address => {
+  return await tronWeb.contract().at(address);
+};
 /**
  * @desc pad string to specific width and padding
  * @param  {String} n
@@ -176,13 +180,14 @@ export const sortBytesArray = _array =>
  * @return {String} link
  */
 export const ethScanLink = (string, network = 'mainnet') => {
-  const pathPrefix = network === 'mainnet' ? '' : `${network}.`;
+  /*const pathPrefix = network === 'mainnet' ? '' : `${network}.`;
   if (validAddressString(string))
     return `https://${pathPrefix}etherscan.io/address/${string}`;
   else if (validTxString(string))
     return `https://${pathPrefix}etherscan.io/tx/${string}`;
   // TODO maybe log to raven instead of throwing
-  else throw new Error(`Can't create Etherscan link for "${string}"`);
+  else throw new Error(`Can't create Etherscan link for "${string}"`);*/
+  return;
 };
 
 export const getUrlParam = param => {

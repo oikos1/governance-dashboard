@@ -8,7 +8,7 @@ import { ThemeProvider } from 'styled-components';
 import { mixpanelInit } from './analytics';
 import createStore from './store';
 import Router from './Routes';
-import createMaker from './chain/maker';
+//import createMaker from './chain/maker';
 import { init, wrongNetwork } from './reducers/metamask';
 import { netIdToName, getUrlParam } from './utils/ethereum';
 
@@ -58,7 +58,7 @@ const useMcdKovanContracts = !!getUrlParam('mcd');
 
 const store = createStore();
 
-if (testchainConfigId) {
+/*if (testchainConfigId) {
   const network = 'ganache';
   (async () => {
     const maker = (window.maker = await createMaker(
@@ -70,29 +70,34 @@ if (testchainConfigId) {
     await window.maker.authenticate();
     store.dispatch(init(maker, network));
   })();
-} else if (window.web3) {
-  window.web3.version.getNetwork(async (err, _netId) => {
-    const netId = parseInt(_netId, 10);
+} else */ if (
+  /*window.web3*/ window.tronWeb
+) {
+  //window.web3.version.getNetwork(async (err, _netId) => {
+  const netId = 1; //parseInt(_netId, 10);
 
-    if (netId !== 1 && netId !== 42) {
-      store.dispatch(wrongNetwork());
-    } else {
-      const network = netIdToName(netId);
-      const maker = (window.maker = await createMaker(
-        network,
-        useMcdKovanContracts
-      ));
-      await maker.authenticate();
-      store.dispatch(init(maker, network));
-    }
-  });
+  //if (netId !== 1 && netId !== 42) {
+  //  store.dispatch(wrongNetwork());
+  //} else {
+  const network = netIdToName(netId);
+
+  /*createMaker(network, useMcdKovanContracts).then((maker)=>{
+        window.maker = maker;
+        maker.authenticate().then((res)=>{
+          store.dispatch(init(maker, network));        
+
+        });
+      });*/
+  store.dispatch(init({}, network));
+  //}
+  //});
 } else {
   // In order to still show read-only data, we will have to re-run Maker.create with an Infura preset.
-  (async () => {
+  /*(async () => {
     const maker = (window.maker = await createMaker());
     await maker.authenticate();
     store.dispatch(init(maker));
-  })();
+  })();*/
 }
 
 mixpanelInit();
