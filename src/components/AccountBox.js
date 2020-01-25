@@ -82,7 +82,7 @@ const AccountBlurbWrapper = styled.div`
 const typeNames = {
   ledger: 'Ledger',
   trezor: 'Trezor',
-  browser: 'Metamask',
+  browser: 'TronWeb',
   provider: 'Metamask'
 };
 
@@ -243,7 +243,6 @@ const mapStateToProps = ({ accounts }, props) => ({
   fetching: props.fetching ? true : accounts.fetching
 });
 
-export default connect(
-  mapStateToProps,
-  { setActiveAccount, modalOpen }
-)(AccountBox);
+export default connect(mapStateToProps, { setActiveAccount, modalOpen })(
+  AccountBox
+);

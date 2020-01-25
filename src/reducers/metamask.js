@@ -64,7 +64,7 @@ export const pollForMetamaskChanges = () => async dispatch => {
     await dispatch(initWeb3Accounts());
     await dispatch(checkNetwork());
 
-    setTimeout(() => dispatch(pollForMetamaskChanges()), 3000);
+    setTimeout(() => dispatch(pollForMetamaskChanges()), 10000);
   } catch (err) {
     console.error(err);
   }
@@ -152,13 +152,13 @@ export const init = (maker, network = 'mainnet') => async dispatch => {
   }
   dispatch(connectSuccess(network));
   dispatch(updateNetwork(network));
-  dispatch(updateMaker(maker));
+  //dispatch(updateMaker(maker));
   dispatch(voteTallyInit());
   dispatch(proposalsInit(network));
-  dispatch(hatInit());
-  dispatch(ethInit());
-  dispatch(pollsInit());
-  dispatch(esmInit());
+  //dispatch(hatInit());
+  //dispatch(ethInit());
+  //dispatch(pollsInit());
+  //dispatch(esmInit());
   await dispatch(initWeb3Accounts());
   dispatch(pollForMetamaskChanges());
 };

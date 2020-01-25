@@ -133,7 +133,7 @@ export const addAccounts = accounts => async dispatch => {
 
     if (hasProxy) {
       //const chiefService = window.maker.service('chief');
-      currProposal = currProposal
+      /*currProposal = currProposal
         .then(() => {
           promiseRetry({
             fn: () => getVotedProposalAddresses(voteProxy)
@@ -146,7 +146,7 @@ export const addAccounts = accounts => async dispatch => {
         });
 
       mkrLockedChiefHot = (await getNumDeposits(hotAddress)).toNumber();
-      mkrLockedChiefCold = (await getNumDeposits(coldAddress)).toNumber();
+      mkrLockedChiefCold = (await getNumDeposits(coldAddress)).toNumber();*/
     }
 
     const chiefAddress = mainnetAddresses['CHIEF']; //window.maker
