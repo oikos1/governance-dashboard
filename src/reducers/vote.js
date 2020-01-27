@@ -9,6 +9,7 @@ import { voteTallyInit } from './tally';
 import { initApprovalsFetch } from './approvals';
 import { hatInit } from './hat';
 import { TransactionStatus } from '../utils/constants';
+import { Vote } from '../services/Chief';
 
 // Constants ----------------------------------------------
 
@@ -40,7 +41,7 @@ const handleTx = ({
   proposalAddresses = []
 }) =>
   new Promise(resolve => {
-    const txMgr = window.maker.service('transactionManager');
+    /*const txMgr = window.maker.service('transactionManager');
     txMgr.listen(txObject, {
       pending: tx => {
         dispatch({
@@ -83,7 +84,7 @@ const handleTx = ({
         });
         resolve();
       }
-    });
+    });*/
   });
 
 const updateVotingFor = (
@@ -111,7 +112,10 @@ const updateVotingFor = (
 };
 
 export const sendVote = proposalAddress => (dispatch, getState) => {
-  const activeAccount = getAccount(getState(), window.maker.currentAddress());
+  const activeAccount = getAccount(
+    getState(),
+    window.tronWeb.defaultAddress.hex
+  );
   if (
     !activeAccount ||
     (!activeAccount.hasProxy && !activeAccount.singleWallet)
@@ -148,11 +152,11 @@ export const sendVote = proposalAddress => (dispatch, getState) => {
 
   let voteExec;
   if (activeAccount.singleWallet) {
-    voteExec = window.maker.service('chief').vote(sortBytesArray(slate));
+    voteExec = Vote(sortBytesArray(slate));
   } else {
-    voteExec = window.maker
-      .service('voteProxy')
-      .voteExec(activeAccount.proxy.address, sortBytesArray(slate));
+    //voteExec = window.maker
+    //  .service('voteProxy')
+    //  .voteExec(activeAccount.proxy.address, sortBytesArray(slate));
   }
 
   return handleTx({

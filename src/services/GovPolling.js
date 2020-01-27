@@ -1,5 +1,6 @@
 import { POLLING } from '../utils/constants';
 import { MKR } from '../utils/constants';
+import { GetAllWhitelistedPolls } from './GovQueryApi';
 
 const POSTGRES_MAX_INT = 2147483647;
 
@@ -49,8 +50,25 @@ const _getPoll = async pollId => {
 
 export const getAllWhitelistedPolls = async () => {
   //if (this.polls) return this.polls;
-  let polls = null; //await this.get('govQueryApi').getAllWhitelistedPolls();
+  let polls = await GetAllWhitelistedPolls();
   return polls;
+};
+
+export const getWinningProposal = async pollId => {
+  const { endDate } = await _getPoll(pollId);
+  const endUnix = Math.floor(endDate / 1000);
+  const endBlock = await this.get('govQueryApi').getBlockNumber(endUnix);
+  const currentVotes = await this.get('govQueryApi').getMkrSupport(
+    pollId,
+    endBlock
+  );
+  let max = currentVotes[0];
+  for (let i = 1; i < currentVotes.length; i++) {
+    if (currentVotes[i].mkrSupport > max.mkrSupport) {
+      max = currentVotes[i];
+    }
+  }
+  return max ? max.optionId : 0;
 };
 
 const refresh = () => {
@@ -100,22 +118,7 @@ const refresh = () => {
       .toNumber();
   }
 
-  async getWinningProposal(pollId) {
-    const { endDate } = await this._getPoll(pollId);
-    const endUnix = Math.floor(endDate / 1000);
-    const endBlock = await this.get('govQueryApi').getBlockNumber(endUnix);
-    const currentVotes = await this.get('govQueryApi').getMkrSupport(
-      pollId,
-      endBlock
-    );
-    let max = currentVotes[0];
-    for (let i = 1; i < currentVotes.length; i++) {
-      if (currentVotes[i].mkrSupport > max.mkrSupport) {
-        max = currentVotes[i];
-      }
-    }
-    return max ? max.optionId : 0;
-  }
+
 
   async getVoteHistory(pollId, numPlots) {
     const { startDate, endDate } = await this._getPoll(pollId);

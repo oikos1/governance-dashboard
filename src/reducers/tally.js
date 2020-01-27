@@ -16,7 +16,7 @@ export const voteTallyInit = () => dispatch => {
   dispatch({ type: TALLY_REQUEST });
   return (
     promiseRetry({
-      times: 3,
+      times: 1,
       fn: getVoteTally,
       delay: 500
     })

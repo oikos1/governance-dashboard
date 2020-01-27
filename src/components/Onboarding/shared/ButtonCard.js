@@ -43,7 +43,7 @@ const ButtonCard = ({
 };
 
 ButtonCard.defaultProps = {
-  buttonText: 'Next'
+  buttonText: 'Next->'
 };
 
 export default ButtonCard;

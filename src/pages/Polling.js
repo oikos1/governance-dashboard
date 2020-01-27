@@ -459,14 +459,7 @@ class Polling extends React.Component {
                   },
                   {
                     name: 'Started',
-                    value: poll.startDate.toLocaleDateString('en-GB', {
-                      weekday: 'short',
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                      hour: 'numeric',
-                      minute: 'numeric'
-                    })
+                    value: poll.startDate
                   },
                   {
                     name: timeLeftString,
@@ -548,7 +541,8 @@ class Polling extends React.Component {
 
 function VoteBreakdown({ poll }) {
   const { voteBreakdownFetching, voteBreakdown, options, legacyPoll } = poll;
-  if (legacyPoll) return null;
+  //if (legacyPoll)
+  return null;
   const voteBreakdownExists = voteBreakdown && voteBreakdown.length > 0;
   return (
     <>
@@ -602,11 +596,8 @@ const reduxProps = (state, { match }) => {
   };
 };
 
-export default connect(
-  reduxProps,
-  {
-    modalOpen,
-    getOptionVotingFor,
-    pollDataInit
-  }
-)(Polling);
+export default connect(reduxProps, {
+  modalOpen,
+  getOptionVotingFor,
+  pollDataInit
+})(Polling);

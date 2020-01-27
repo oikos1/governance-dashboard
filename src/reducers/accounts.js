@@ -4,17 +4,20 @@ import pipe from 'ramda/src/pipe';
 import differenceWith from 'ramda/src/differenceWith';
 
 import { createReducer } from '../utils/redux';
-import { AccountTypes, CHIEF } from '../utils/constants';
+import { AccountTypes, CHIEF, ZERO_ADDRESS } from '../utils/constants';
 import { loadContract } from '../utils/ethereum';
 
-import { getNumDeposits } from '../services/Chief';
+import {
+  getNumDeposits,
+  getVotedSlate,
+  getSlateAddresses
+} from '../services/Chief';
 import {
   getVoteProxy,
   getColdAddress,
   getHotAddress,
   getVotedProposalAddresses
 } from '../services/VoteProxy';
-
 import {
   add,
   eq,
@@ -35,6 +38,7 @@ import { MAX_UINT_ETH_BN } from '../utils/ethereum';
 import { MKR } from '../chain/maker';
 
 // Constants ----------------------------------------------
+const mainnetAddresses = require('../chain/addresses/mainnet.json');
 
 // the Ledger subprovider interprets these paths to mean that the last digit is
 // the one that should be incremented.
@@ -60,8 +64,6 @@ export const HARDWARE_ACCOUNTS_ERROR = 'accounts/HARDWARE_ACCOUNTS_ERROR';
 
 export const HARDWARE_ACCOUNT_CONNECTED = 'accounts/HARDWARE_ACCOUNT_CONNECTED';
 export const HARDWARE_ACCOUNT_ERROR = 'accounts/HARDWARE_ACCOUNT_ERROR';
-
-const mainnetAddresses = require('../chain/addresses/mainnet.json');
 
 // Selectors ----------------------------------------------
 
@@ -97,27 +99,22 @@ export function activeCanVote(state) {
 
 export const addAccounts = accounts => async dispatch => {
   dispatch({ type: FETCHING_ACCOUNT_DATA, payload: true });
-
-  console.log('addAccounts', accounts);
-
+  console.log('got accounts', accounts);
   for (let account of accounts) {
-    //Contract objects
     const mkrToken = await loadContract(mainnetAddresses['GOV']); //window.maker.getToken(MKR);
-    //console.log("got GOV", mkrToken);
-    //return
     const iouToken = await loadContract(mainnetAddresses['IOU']); //window.maker.getToken('IOU');
 
     const { hasProxy, voteProxy } = await getVoteProxy(account.address);
 
-    const o = await getVoteProxy(account.address);
-
-    hasProxy = o.hasProxy;
-    voteProxy = o.address;
-
-    const voteProxyC = await loadContract(voteProxy);
+    console.log(
+      'found proxy',
+      hasProxy,
+      'address',
+      voteProxy.getProxyAddress()
+    );
 
     const proxyRole = hasProxy
-      ? getColdAddress(voteProxy) === account.address
+      ? voteProxy.getColdAddress() === account.address
         ? 'cold'
         : 'hot'
       : '';
@@ -127,76 +124,102 @@ export const addAccounts = accounts => async dispatch => {
     let mkrLockedChiefHot = 0;
     let mkrLockedChiefCold = 0;
 
-    const hotAddress = await getHotAddress(voteProxy);
-    const coldAddress = await getColdAddress(voteProxy);
-    //console.log("hotAddress", hotAddress, "coldAddress", coldAddress);
-
     if (hasProxy) {
       //const chiefService = window.maker.service('chief');
-      /*currProposal = currProposal
-        .then(() => {
-          promiseRetry({
-            fn: () => getVotedProposalAddresses(voteProxy)
-          });
-          return;
-        })
-        .then(addresses => {
-          console.log('got addresses', addresses);
-          (addresses || []).map(address => address.toLowerCase());
-        });
 
-      mkrLockedChiefHot = (await getNumDeposits(hotAddress)).toNumber();
-      mkrLockedChiefCold = (await getNumDeposits(coldAddress)).toNumber();*/
+      currProposal = currProposal
+        .then(() =>
+          promiseRetry({
+            fn: () => getVotedProposalAddresses(voteProxy.getProxyAddress())
+          })
+        )
+        .then(addresses =>
+          (addresses || []).map(address => address.toLowerCase())
+        );
+
+      if (
+        voteProxy.getHotAddress() != null ||
+        voteProxy.getHotAddress() != ZERO_ADDRESS
+      )
+        mkrLockedChiefHot = (
+          await getNumDeposits(voteProxy.getHotAddress())
+        ).toNumber();
+
+      if (
+        voteProxy.getColdAddress() != null &&
+        voteProxy.getColdAddress() != ZERO_ADDRESS
+      )
+        mkrLockedChiefCold = (
+          await getNumDeposits(voteProxy.getColdAddress())
+        ).toNumber();
     }
 
-    const chiefAddress = mainnetAddresses['CHIEF']; //window.maker
-    //.service('smartContract')
-    //.getContractAddressByName(CHIEF);
+    const chiefAddress = mainnetAddresses['CHIEF'];
 
     const linkedAccountData = async () => {
       const otherRole = proxyRole === 'hot' ? 'cold' : 'hot';
-      const mkrBalance = await mkrToken.balanceOf(linkedAddress).call();
       const linkedAddress =
         otherRole === 'hot'
-          ? getHotAddress(voteProxy)
-          : getColdAddress(voteProxy);
-      return {
-        proxyRole: otherRole,
-        address: linkedAddress,
-        mkrBalance: mkrBalance
-      };
+          ? voteProxy.getHotAddress()
+          : voteProxy.getColdAddress();
+      console.log(
+        'linkedAddress',
+        otherRole,
+        linkedAddress,
+        voteProxy.getHotAddress(),
+        voteProxy.getColdAddress()
+      );
+      if (linkedAddress)
+        return {
+          proxyRole: otherRole,
+          address: linkedAddress,
+          mkrBalance: await mkrToken.balanceOf(linkedAddress).call()
+        };
+      else
+        return {
+          proxyRole: otherRole,
+          address: '',
+          mkrBalance: 0
+        };
     };
 
     const _payload = {
       ...account,
       address: account.address,
-      mkrInEsm: 0, //window.maker
-      //  .service('esm')
-      //  .getTotalStakedByAddress(account.address),
+      mkrInEsm: 0,
+      //window.maker
+      //.service('esm')
+      //getTotalStakedByAddress(account.address),
       mkrBalance: promiseRetry({
-        fn: () => mkrToken.balanceOf(account.address).call()
+        fn: async () => await mkrToken.balanceOf(account.address).call()
       }),
       hasProxy,
       proxyRole: proxyRole,
       votingFor: currProposal,
-      hasInfMkrApproval: 0, //mkrToken
-      //.allowance(account.address, chiefAddress).call()
+      hasInfMkrApproval:
+        (await mkrToken.allowance(account.address, chiefAddress).call()) >
+        MAX_UINT_ETH_BN,
+      //mkrToken
+      //.allowance(account.address, chiefAddress)
       //.then(val => val.eq(MAX_UINT_ETH_BN)),
-      hasInfIouApproval: 0, //iouToken
-      //.allowance(account.address, chiefAddress).call()
+      hasInfIouApproval:
+        (await iouToken.allowance(account.address, chiefAddress).call()) >
+        MAX_UINT_ETH_BN,
+      //iouToken
+      //.allowance(account.address, chiefAddress)
       //.then(val => val.eq(MAX_UINT_ETH_BN)),
       proxy: hasProxy
         ? promisedProperties({
-            address: voteProxy,
-            votingPower: getNumDeposits(voteProxy),
-            hasInfMkrApproval: 0, //mkrToken
-            //.allowance(account.address, voteProxy).call()
+            address: voteProxy.getProxyAddress(),
+            votingPower: getNumDeposits(voteProxy.getProxyAddress()),
+            hasInfMkrApproval:
+              (await mkrToken
+                .allowance(account.address, voteProxy.getProxyAddress())
+                .call()) > MAX_UINT_ETH_BN,
+            //mkrToken
+            //.allowance(account.address, voteProxy.getProxyAddress())
             //.then(val => val.eq(MAX_UINT_ETH_BN)),
-            linkedAccount: {
-              proxyRole: 'hot',
-              address: hotAddress,
-              mkrBalance: await mkrToken.balanceOf(voteProxy).call()
-            } //linkedAccountData()
+            linkedAccount: linkedAccountData()
           })
         : {
             address: '',
@@ -211,7 +234,8 @@ export const addAccounts = accounts => async dispatch => {
 
     try {
       const payload = await promisedProperties(_payload);
-      console.log('got payload of ', payload);
+      console.log('got account payload', payload);
+      setActiveAccount(account.address);
 
       dispatch({ type: ADD_ACCOUNT, payload });
     } catch (e) {
@@ -225,40 +249,38 @@ export const addAccounts = accounts => async dispatch => {
 export const addSingleWalletAccount = account => async dispatch => {
   dispatch({ type: FETCHING_ACCOUNT_DATA, payload: true });
 
-  const chiefAddress = window.maker
-    .service('smartContract')
-    .getContractAddressByName(CHIEF);
+  const chiefAddress = mainnetAddresses['CHIEF'];
+  //window.maker
+  //.service('smartContract')
+  //.getContractAddressByName(CHIEF);
+  const mkrToken = await loadContract(mainnetAddresses['GOV']); //window.maker.getToken(MKR);
+  const iouToken = await loadContract(mainnetAddresses['IOU']); //window.maker.getToken('IOU');
 
-  const mkrToken = window.maker.getToken(MKR);
-  const iouToken = window.maker.getToken('IOU');
-
-  const chiefService = window.maker.service('chief');
+  //const chiefService = window.maker.service('chief');
 
   const currProposal = (async () => {
-    const _slate = await chiefService.getVotedSlate(account.address);
-    const slateAddresses = await chiefService.getSlateAddresses(_slate);
+    const _slate = await getVotedSlate(account.address);
+    const slateAddresses = await getSlateAddresses(_slate);
     return (slateAddresses || []).map(address => address.toLowerCase());
   })();
 
-  const votingPower = (
-    await chiefService.getNumDeposits(account.address)
-  ).toNumber();
+  const votingPower = (await getNumDeposits(account.address)).toNumber();
 
-  const hasInfMkrApproval = (
-    await mkrToken.allowance(account.address, chiefAddress)
-  ).eq(MAX_UINT_ETH_BN);
+  const hasInfMkrApproval =
+    (await mkrToken.allowance(account.address, chiefAddress).call()) >
+    MAX_UINT_ETH_BN;
 
-  const hasInfIouApproval = (
-    await iouToken.allowance(account.address, chiefAddress)
-  ).eq(MAX_UINT_ETH_BN);
+  const hasInfIouApproval =
+    (await iouToken.allowance(account.address, chiefAddress).call()) >
+    MAX_UINT_ETH_BN;
 
   const _payload = {
     ...account,
     address: account.address,
-    mkrBalance: toNum(
-      promiseRetry({ fn: () => mkrToken.balanceOf(account.address) })
-    ),
-    hasProxy: false,
+    mkrBalance: promiseRetry({
+      fn: async () => await mkrToken.balanceOf(account.address).call()
+    }),
+    hasProxy: true,
     singleWallet: true,
     proxyRole: '',
     votingFor: currProposal,
@@ -275,8 +297,8 @@ export const addSingleWalletAccount = account => async dispatch => {
 
   try {
     const payload = await promisedProperties(_payload);
+    console.log('got payload', payload);
     dispatch({ type: ADD_ACCOUNT, payload });
-    setActiveAccount(account.address);
   } catch (e) {
     console.error('failed to add account', e);
   }
@@ -285,20 +307,16 @@ export const addSingleWalletAccount = account => async dispatch => {
 };
 
 export const addAccount = account => async dispatch => {
-  const { hasProxy } = false; //await window.maker
-  //.service('voteProxy')
-  //.getVoteProxy(account.address);
+  const { hasProxy } = getVoteProxy(account.address);
 
-  const numDeposits = 0; //await window.maker
-  //.service('chief')
-  //.getNumDeposits(account.address);
+  const numDeposits = await getNumDeposits(account.address);
 
   // if we don't have a vote proxy, but we have locked MKR, we must be voting with a single wallet
-  if (!hasProxy && numDeposits > 0) {
-    return await dispatch(addSingleWalletAccount(account));
-  } else {
-    return await dispatch(addAccounts([account]));
-  }
+  //if (!hasProxy && numDeposits.toNumber() > 0) {
+  return await dispatch(addSingleWalletAccount(account));
+  //} else {
+  //return await dispatch(addAccounts([account]));
+  //}
 };
 
 export const removeAccounts = accounts => ({
@@ -312,22 +330,14 @@ export const updateAccount = account => ({
 });
 
 export const addMetamaskAccount = address => async (dispatch, getState) => {
-  console.log('addMetamaskAccount', address);
   // Only add new accounts that we haven't seen before
   if (getAccount(getState(), address)) return;
 
   try {
-    console.log('trying to add ', address);
     //await window.maker
     //  .service('accounts')
     //  .addAccount({ type: AccountTypes.METAMASK });
-    // window.maker.service('accounts')
-    // .addAccount({ type: AccountTypes.METAMASK })
-    // .then((res)=>{
-    //   console.log("got res from window.maker.service('accounts').addAccount", res)
-    dispatch(addAccount({ address, type: AccountTypes.METAMASK }));
-    //   return
-    // });
+    return dispatch(addAccount({ address, type: AccountTypes.METAMASK }));
   } catch (error) {
     dispatch({ type: NO_METAMASK_ACCOUNTS });
   }

@@ -5,7 +5,7 @@ import { formatRound, check } from '../utils/misc';
 import { addToastWithTimeout, ToastTypes } from './toasts';
 import { TransactionStatus } from '../utils/constants';
 import { generateIPFSHash } from '../utils/ipfs';
-import { getAllWhitelistedPolls } from '../services/GovPolling';
+import { GetAllWhitelistedPolls } from '../services/GovQueryApi';
 
 // Constants ----------------------------------------------
 
@@ -23,6 +23,8 @@ export const POLL_VOTE_FAILURE = 'poll/VOTE_FAILURE';
 export const POLLS_SET_OPTION_VOTING_FOR = 'polls/SET_OPTION_VOTING_FOR';
 export const ADD_POLL = 'poll/ADD_POLL';
 export const UPDATE_POLL = 'polls/UPDATE_POLL';
+
+const mainnetAddresses = require('../chain/addresses/mainnet.json');
 
 // Actions ----------------------------------------------
 
@@ -117,16 +119,17 @@ export const withdrawVoteForPoll = pollId => async dispatch => {
 
 // Reads ---
 
-const getAllWhiteListedPolls = async () => {
-  const pollsList = //await window.maker
-    //.service('govPolling')
-    getAllWhitelistedPolls();
+/*const _getAllWhiteListedPolls = async () => {
+  const pollsList =  await GetAllWhitelistedPolls();
 
   const uniqPolls = uniqBy(pollsList, p => p.multiHash);
   // Don't process polls where startDate is in the future
   const polls = uniqPolls.filter(poll => poll.startDate <= new Date());
-  return polls;
-};
+
+  console.log("SHOWING POLLS ========>", pollsList.length, pollsList[0])
+
+  return Promise.all(pollsList);
+};*/
 
 export const getOptionVotingFor = (address, pollId) => async dispatch => {
   let optionId = await window.maker
@@ -184,6 +187,7 @@ const formatYamlToJson = async data => {
 };
 
 const isPollActive = (startDate, endDate) => {
+  return true;
   const now = new Date();
   return startDate <= now && endDate > now ? true : false;
 };
@@ -288,38 +292,63 @@ export const pollsInit = () => async dispatch => {
   dispatch(pollsRequest());
 
   try {
-    const polls = await getAllWhiteListedPolls();
+    const polls = GetAllWhitelistedPolls().then(res => {
+      let pollsRemaining = res.activePolls.nodes.length;
+      //let o = new Object(res);
+      //console.log("casted to ", JSON.stringify(res))
 
-    let pollsRemaining = polls.length;
-    function onPollFetchAttempt() {
-      pollsRemaining--;
-      if (pollsRemaining === 0) dispatch(pollsSuccess());
-    }
-    for (const poll of polls) {
-      fetchPollFromUrl(poll.url)
-        .then(async pollDocument => {
-          if (pollDocument === null)
-            throw new Error(
-              `Error fetching data for poll with ID ${poll.pollId}`
-            );
-          try {
-            const documentData = await formatYamlToJson(pollDocument);
-            const pollData = { ...poll, ...documentData };
-            pollData.active = isPollActive(
-              pollData.startDate,
-              pollData.endDate
-            );
-            pollData.source = window.maker
-              .service('smartContract')
-              .getContract('POLLING').address;
-            dispatch(addPoll(pollData));
-          } catch (e) {
-            throw e;
-          }
-        })
-        .catch(e => console.error(e))
-        .finally(onPollFetchAttempt);
-    }
+      //for (var i=0;i<pollsRemaining;i++){
+      //  let x = polls.activePolls.nodes[i]
+      //  pollsArr.push(x);
+      //}
+
+      //res.activePolls.nodes.forEach(element => console.log("element", element));
+
+      //for (const poll of pollsArr) {
+      res.activePolls.nodes.forEach(poll => {
+        console.log('checking poll', poll.pollId);
+
+        function onPollFetchAttempt() {
+          pollsRemaining--;
+          console.log('pollsRemaining', pollsRemaining);
+          if (pollsRemaining === 0) dispatch(pollsSuccess());
+        }
+        //fetchPollFromUrl("http://test.dummy/url") //poll.url
+        //  .then(async pollDocument => {
+        //if (pollDocument === null)
+        //  throw new Error(
+        //    `Error fetching data for poll with ID ${poll.pollId}`
+        //  );
+
+        try {
+          const documentData = {
+            voteId: 'testVoteIdHashed',
+            title: 'test',
+            summary: 'Test summary Lorem ipsum dixit',
+            options: {},
+            discussion_link: 'http://reddit.com/r/oikos/testlink',
+            content:
+              'Test content fill me with Lorem ipsum dixit Lorem ipsum dixit'
+          }; //await formatYamlToJson(pollDocument);
+          const pollData = { ...poll, ...documentData };
+          pollData.active = isPollActive(
+            pollData.startBlock,
+            pollData.endBlock
+          );
+          pollData.startDate = pollData.startBlock;
+          pollData.endDate = pollData.endBlock;
+
+          pollData.source = mainnetAddresses['POLLING'];
+          dispatch(addPoll(pollData));
+        } catch (e) {
+          throw e;
+        }
+        //})
+        //.catch(e => console.error(e))
+        //.finally(onPollFetchAttempt);
+        onPollFetchAttempt();
+      });
+    });
   } catch (error) {
     console.error(error);
     dispatch(pollsFailure());
@@ -328,6 +357,8 @@ export const pollsInit = () => async dispatch => {
 
 export const pollDataInit = poll => dispatch => {
   if (!poll) return;
+  console.log('pollDataInit', poll);
+
   const { pollId, options, endDate, active } = poll;
   getTotalVotes(pollId).then(totalVotes =>
     dispatch(updatePoll(pollId, { totalVotes }))
@@ -353,6 +384,7 @@ export const pollDataInit = poll => dispatch => {
 };
 
 export const formatHistoricalPolls = topics => async dispatch => {
+  console.log('formatHistoricalPolls', topics);
   const govTopics = topics.filter(t => t.govVote === true);
   const allPolls = govTopics.reduce(
     (result, { end_timestamp, date, topic_blurb, topic, key, proposals }) => {
@@ -371,8 +403,7 @@ export const formatHistoricalPolls = topics => async dispatch => {
         source:
           proposals[0] && proposals[0].source
             ? proposals[0].source
-            : window.maker.service('smartContract').getContract('POLLING')
-                .address,
+            : mainnetAddresses['POLLING'],
         startDate: new Date(date),
         summary: topic_blurb,
         title: topic,

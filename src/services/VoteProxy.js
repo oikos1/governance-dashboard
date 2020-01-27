@@ -7,6 +7,7 @@ import {
 } from '../utils/constants';
 import { getCurrency } from '@makerdao/currency';
 import { getVotedSlate, getSlateAddresses } from './Chief';
+import VoteProxy from '../components/VoteProxy';
 
 const mainnetAddresses = require('../chain/addresses/mainnet.json');
 
@@ -37,29 +38,36 @@ const voteExec = (proxyAddress, picks) => {
 export const getVotedProposalAddresses = async proxyAddress => {
   //const x = await loadContract(mainnetAddresses['CHIEF']);
   //console.log("got x", x)
+
   const _slate = await getVotedSlate(proxyAddress);
 
+  console.log('got slate', _slate);
+  console.log('getting addresses for slate', await getSlateAddresses(_slate));
   return await getSlateAddresses(_slate);
 };
 
 export const getVoteProxy = async addressToCheck => {
-  const { hasProxy, role, address: proxyAddress } = await _getProxyStatus(
-    addressToCheck
-  );
+  const {
+    hasProxy,
+    role,
+    address: proxyAddress,
+    proxy
+  } = await _getProxyStatus(addressToCheck);
 
-  console.log('user has proxy :', hasProxy);
+  console.log('getVoteProxy got', hasProxy, role, proxyAddress, proxy);
 
   if (!hasProxy) return { hasProxy, voteProxy: null };
+
   const otherRole = role === 'hot' ? 'cold' : 'hot';
-  const otherAddress = await _getAddressOfRole(proxyAddress, otherRole);
+  const otherAddress = await _getAddressOfRole(proxy, otherRole);
   return {
     hasProxy,
-    address: proxyAddress /*new VoteProxy({
-        voteProxyService: this,
-        proxyAddress,
-        [`${role}Address`]: addressToCheck,
-        [`${otherRole}Address`]: otherAddress
-      })*/
+    voteProxy: new VoteProxy({
+      voteProxyService: null,
+      proxyAddress,
+      [`${role}Address`]: addressToCheck,
+      [`${otherRole}Address`]: otherAddress
+    })
   };
 };
 
@@ -79,27 +87,41 @@ const _proxyFactoryContract = () => {
 const _getProxyStatus = async address => {
   const x = await loadContract(mainnetAddresses['VOTE_PROXY_FACTORY']);
 
-  const [proxyAddressCold, proxyAddressHot] = await Promise.all([
+  const [proxyAddressCold, proxyAddressHot, proxyAddress] = await Promise.all([
     x.coldMap(address).call(),
-    x.hotMap(address).call()
+    x.hotMap(address).call(),
+    x.registry(address).call()
   ]);
 
   console.log(
     'got hot address',
     proxyAddressHot,
     'cold address',
-    proxyAddressCold
+    proxyAddressCold,
+    'proxyAddress',
+    proxyAddress
   );
 
   if (proxyAddressCold !== ZERO_ADDRESS)
-    return { role: 'cold', address: proxyAddressCold, hasProxy: true };
+    return {
+      role: 'cold',
+      address: proxyAddressCold,
+      hasProxy: true,
+      proxy: proxyAddress
+    };
   if (proxyAddressHot !== ZERO_ADDRESS)
-    return { role: 'hot', address: proxyAddressHot, hasProxy: true };
-  return { role: null, address: '', hasProxy: false };
+    return {
+      role: 'hot',
+      address: proxyAddressHot,
+      hasProxy: true,
+      proxy: proxyAddress
+    };
+  return { role: null, address: '', hasProxy: false, proxy: '' };
 };
 
 const _getAddressOfRole = async (proxyAddress, role) => {
   const x = await loadContract(proxyAddress);
+  console.log('got X', x);
   if (role === 'hot') return x.hot().call();
   else if (role === 'cold') return x.cold().call();
   return null;

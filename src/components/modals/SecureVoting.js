@@ -68,8 +68,9 @@ const SecureVoting = ({ modalOpen, modalClose, activeAccount, network }) => {
             <VoteImpactHeading>Total MKR balance</VoteImpactHeading>
             <MkrAmt>
               {formatRound(
-                Number(coldWallet.mkrBalance) +
-                  Number(activeAccount.proxy.votingPower),
+                (Number(coldWallet.mkrBalance) +
+                  Number(activeAccount.proxy.votingPower)) /
+                  10 ** 18,
                 4
               )}
             </MkrAmt>

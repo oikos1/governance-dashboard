@@ -206,7 +206,7 @@ export const VotingWeightBanner = ({ accountsFetching, activeAccount }) => {
       <FadeIn>
         <SmallMediumText>
           <Strong>Connected wallet: </Strong>
-          <Black>{formatRound(pollVotingPower, 4)} MKR</Black>{' '}
+          <Black>{Number(pollVotingPower) / 10 ** 18} MKR</Black>{' '}
         </SmallMediumText>
       </FadeIn>
     );
@@ -223,14 +223,15 @@ const PollingList = ({
 }) => {
   polls.sort((a, b) => b.startDate - a.startDate);
   const winningProposal = poll => {
-    if (poll.legacyPoll) {
-      const wp = getWinningProp({ proposals, approvals }, poll.pollId);
-      return wp ? wp.title : 'Not available';
-    }
-    const winningProp = poll.options[poll.winningProposal]
-      ? poll.options[poll.winningProposal]
-      : null;
-    return winningProp;
+    //if (poll.legacyPoll) {
+    const wp = getWinningProp({ proposals, approvals }, poll.pollId);
+    //  return wp ? wp.title : 'Not available';
+    //}
+    //const winningProp = poll.options[poll.winningProposal]
+    // ? poll.options[poll.winningProposal]
+    //  : null;
+    //return winningProp;
+    return wp ? wp.title : 'Not available';
   };
   return (
     <Fragment>
@@ -268,7 +269,7 @@ const PollingList = ({
                   }}
                 />
                 <Timer
-                  endTimestamp={poll.endDate}
+                  endTimestamp={poll.startBlock}
                   winningProposal={winningProposal(poll)}
                   small
                   mb="-6"

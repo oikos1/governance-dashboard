@@ -56,7 +56,7 @@ export function getWinningProp(state, topicKey) {
 
 // Backend ------------------------------------------------
 
-const local = 'http://localhost:3000';
+const local = 'http://localhost:31337/v1';
 // const prod = 'https://content.makerfoundation.com';
 // const staging = 'https://elb.content.makerfoundation.com:444';
 const prod = 'https://cms-gov.makerfoundation.com';

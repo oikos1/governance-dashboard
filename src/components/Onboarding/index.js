@@ -60,7 +60,7 @@ const Onboarding = ({ open, step, state, ...props }) => {
       left="0"
     >
       <Introduction
-        show={open && state === OnboardingStates.INTRODUCTION}
+        show={!open && state === OnboardingStates.INTRODUCTION}
         onClose={onboardingProps.close}
         activeAccountType={props.activeAccountType}
         onLinkedWallet={() =>
@@ -78,7 +78,15 @@ const Onboarding = ({ open, step, state, ...props }) => {
           open={open}
           onboarding={onboardingProps}
         />
-      ) : null}
+      ) : (
+        //forced singleWallet onboarding here
+        //null
+        <SingleWalletOnboarding
+          step={step}
+          open={open}
+          onboarding={onboardingProps}
+        />
+      )}
     </Background>
   );
 };

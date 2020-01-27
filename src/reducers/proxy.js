@@ -2,6 +2,8 @@ import ReactGA from 'react-ga';
 
 import { createReducer } from '../utils/redux';
 import { parseError } from '../utils/misc';
+import { loadContract } from '../utils/ethereum';
+
 import {
   getAccount,
   addAccounts,
@@ -62,6 +64,7 @@ export const BREAK_LINK_REQUEST = 'proxy/BREAK_LINK_REQUEST';
 export const BREAK_LINK_SENT = 'proxy/BREAK_LINK_SENT';
 export const BREAK_LINK_SUCCESS = 'proxy/BREAK_LINK_SUCCESS';
 export const BREAK_LINK_FAILURE = 'proxy/BREAK_LINK_FAILURE';
+const mainnetAddresses = require('../chain/addresses/mainnet.json');
 
 // Actions ------------------------------------------------
 
@@ -73,7 +76,8 @@ const handleTx = ({
   acctType
 }) =>
   new Promise(resolve => {
-    const txMgr = window.maker.service('transactionManager');
+    /*const txMgr = null ;
+    window.maker.service('transactionManager');
     txMgr.listen(txObject, {
       pending: tx => {
         dispatch({
@@ -100,7 +104,7 @@ const handleTx = ({
         });
         resolve(false);
       }
-    });
+    });*/
   });
 
 function useHotAccount(state) {
@@ -108,13 +112,13 @@ function useHotAccount(state) {
 
   if (
     account.type === AccountTypes.METAMASK &&
-    window.web3.eth.defaultAccount !== account.address
+    window.tronWeb.defaultAddress.hex !== account.address
   ) {
     window.alert(`Please switch to your hot wallet with Metamask.`);
     return false;
   }
 
-  if (state.onboarding.hotWallet.address !== account.address) {
+  /*if (state.onboarding.hotWallet.address !== account.address) {
     if (
       account.type === AccountTypes.METAMASK &&
       window.maker.currentAccount().type === AccountTypes.METAMASK
@@ -122,13 +126,14 @@ function useHotAccount(state) {
       console.warn('Should have auto-switched to this account...');
     }
     window.maker.useAccountWithAddress(state.onboarding.hotWallet.address);
-  }
+  }*/
 
   return true;
 }
 
 function useColdAccount(state) {
-  const account = getAccount(state, window.maker.currentAddress());
+  const account = getAccount(state, window.tronWeb.defaultAddress.hex);
+  console.log('useColdAccount', account);
 
   if (account.singleWallet) {
     return true;
@@ -136,7 +141,7 @@ function useColdAccount(state) {
     state.onboarding.coldWallet &&
     state.onboarding.coldWallet.address !== account.address
   ) {
-    window.maker.useAccountWithAddress(state.onboarding.coldWallet.address);
+    //window.maker.useAccountWithAddress(state.onboarding.coldWallet.address);
   }
   return true;
 }
@@ -184,16 +189,21 @@ export const approveLink = ({ hot, cold }) => (dispatch, getState) => {
 
 export const lock = value => async (dispatch, getState) => {
   if (value === 0) return;
-  if (!useColdAccount(getState())) return;
-  const account = getAccount(getState(), window.maker.currentAddress());
+  //if (!useColdAccount(getState())) return;
+  const account = getAccount(getState(), window.tronWeb.defaultAddress.hex);
 
   dispatch({ type: SEND_MKR_TO_PROXY_REQUEST, payload: value });
 
+  let chief = await loadContract(mainnetAddresses['CHIEF']);
+  let voteProxy = await loadContract(mainnetAddresses['VOTE_PROXY']);
+
   let lock;
   if (account.singleWallet) {
-    lock = window.maker.service('chief').lock(value);
+    lock = await chief
+      .lock(value)
+      .send({ shouldPollResponse: true, callValue: value });
   } else {
-    lock = window.maker.service('voteProxy').lock(account.proxy.address, value);
+    lock = voteProxy.lock(account.proxy.address, value).send();
   }
 
   return handleTx({
@@ -207,7 +217,7 @@ export const lock = value => async (dispatch, getState) => {
 
 export const free = value => (dispatch, getState) => {
   if (value <= 0) return;
-  const account = getAccount(getState(), window.maker.currentAddress());
+  const account = getAccount(getState(), window.tronWeb.defaultAddress.hex);
 
   let free;
   if (account.singleWallet) {
@@ -227,7 +237,7 @@ export const free = value => (dispatch, getState) => {
 };
 export const freeAll = value => (dispatch, getState) => {
   if (value <= 0) return;
-  const account = getAccount(getState(), window.maker.currentAddress());
+  const account = getAccount(getState(), window.tronWeb.defaultAddress.hex);
 
   let freeAll;
   if (account.singleWallet) {
@@ -247,9 +257,10 @@ export const freeAll = value => (dispatch, getState) => {
 };
 
 export const breakLink = () => (dispatch, getState) => {
+  return;
   dispatch({ type: BREAK_LINK_REQUEST });
-  const currentAccount = window.maker.currentAccount();
-  const account = getAccount(getState(), currentAccount.address);
+  //const currentAccount = window.maker.currentAccount();
+  const account = getAccount(getState(), window.tronWeb.defaultAddress.base58);
 
   const otherAccount = getAccount(
     getState(),
@@ -257,36 +268,49 @@ export const breakLink = () => (dispatch, getState) => {
   );
   const accountsToRefresh = otherAccount ? [account, otherAccount] : [account];
 
-  window.maker.useAccountWithAddress(currentAccount.address);
-  const breakLink = window.maker.service('voteProxyFactory').breakLink();
+  //window.maker.useAccountWithAddress(currentAccount.address);
+  const breakLink = breakLink();
 
   return handleTx({
     prefix: 'BREAK_LINK',
     dispatch,
     txObject: breakLink,
-    acctType: currentAccount.type
+    acctType: 'BROWSER' //currentAccount.type
   }).then(success => {
     success && dispatch(addAccounts(accountsToRefresh));
   });
 };
 
-export const mkrApproveSingleWallet = () => (dispatch, getState) => {
-  const account = getAccount(getState(), window.maker.currentAddress());
+export const mkrApproveSingleWallet = () => async (dispatch, getState) => {
+  const account = getAccount(getState(), window.tronWeb.defaultAddress.base58);
 
-  const chiefAddress = window.maker
-    .service('smartContract')
-    .getContractAddressByName(CHIEF);
+  const chiefAddress = mainnetAddresses['CHIEF'];
+  //window.maker
+  //  .service('smartContract')
+  //  .getContractAddressByName(CHIEF);
 
-  const giveChiefAllowance = window.maker
-    .getToken(MKR)
-    .approveUnlimited(chiefAddress);
+  const mkr = await loadContract(mainnetAddresses['GOV']);
+
+  console.log('got mkr', mkr, window.tronWeb.defaultAddress.base58);
+
+  const giveChiefAllowance = await mkr
+    .approve(chiefAddress, '100000000000000000000000')
+    .send({
+      shouldPollResponse: true,
+      callValue: 0,
+      from: window.tronWeb.defaultAddress.hex
+    });
+
+  //window.maker
+  //.getToken(MKR)
+  //.approveUnlimited(chiefAddress);
 
   dispatch({ type: MKR_APPROVE_REQUEST });
   return handleTx({
     prefix: 'MKR_APPROVE',
     dispatch,
     txObject: giveChiefAllowance,
-    acctType: account.type,
+    acctType: 'BROWSER',
     successPayload: 'single-wallet'
   }).then(success => success && dispatch(addSingleWalletAccount(account)));
 };
@@ -313,15 +337,16 @@ export const iouApproveSingleWallet = () => (dispatch, getState) => {
 
 export const mkrApproveProxy = () => (dispatch, getState) => {
   if (!useColdAccount(getState())) return;
-  const account = getAccount(getState(), window.maker.currentAddress());
+  const account = getAccount(getState(), window.tronWeb.defaultAddress.hex);
   let proxyAddress = account.proxy.address;
   if (!proxyAddress) {
     //if proxy address not stored in accounts yet, then it should be in proxy store
     proxyAddress = getState().proxy.proxyAddress;
   }
-  const giveProxyAllowance = window.maker
-    .getToken(MKR)
-    .approveUnlimited(proxyAddress);
+  const giveProxyAllowance = null;
+  //window.maker
+  //.getToken(MKR)
+  //.approveUnlimited(proxyAddress);
 
   dispatch({ type: MKR_APPROVE_REQUEST });
   return handleTx({

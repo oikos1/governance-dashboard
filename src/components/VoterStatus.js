@@ -177,7 +177,7 @@ const VoterStatus = ({
           )}
           <DotSpacer />
           In cold wallet{' '}
-          <Black>{formatRound(coldWallet.mkrBalance, 4)} MKR</Black>{' '}
+          <Black>{Number(coldWallet.mkrBalance) / 10 ** 18} MKR</Black>{' '}
           <DotSpacer />
           {linkedAccount.address !== '0x' && (
             <Fragment>
@@ -196,7 +196,7 @@ const VoterStatus = ({
           {!legacy && (
             <Fragment>
               Total voting weight:{' '}
-              <Black>{formatRound(pollVotingPower, 4)} MKR</Black>{' '}
+              <Black>{Number(pollVotingPower) / 10 ** 18} MKR</Black>{' '}
             </Fragment>
           )}
           <br />
@@ -242,7 +242,9 @@ const VoterStatus = ({
           )}
           <DotSpacer />
           Remaining wallet balance{' '}
-          <Black>{formatRound(coldWallet.mkrBalance, 4)} MKR</Black>{' '}
+          <Black>
+            {formatRound(Number(coldWallet.mkrBalance) / 10 ** 18, 4)} MKR
+          </Black>{' '}
           <DotSpacer />
           {linkedAccount.address !== '0x' && (
             <Fragment>
@@ -296,7 +298,6 @@ const mapStateToProps = state => ({
   onboardingState: state.onboarding.state
 });
 
-export default connect(
-  mapStateToProps,
-  { modalOpen, onboardingOpen }
-)(VoterStatus);
+export default connect(mapStateToProps, { modalOpen, onboardingOpen })(
+  VoterStatus
+);

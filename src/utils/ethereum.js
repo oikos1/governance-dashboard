@@ -12,7 +12,7 @@ export const MAX_UINT = `0x${Array(64 + 1).join('f')}`;
 export const MAX_UINT_ETH_BN = BigNumber(MAX_UINT).shiftedBy(-18);
 
 export const loadContract = async address => {
-  return await tronWeb.contract().at(address);
+  return await window.tronWeb.contract().at(address);
 };
 /**
  * @desc pad string to specific width and padding

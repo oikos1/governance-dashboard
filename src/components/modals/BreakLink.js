@@ -33,8 +33,8 @@ class BreakLink extends Component {
     const hotAddress = isColdWallet ? linkedAccount.address : account.address;
     const ethToken = await loadContract(mainnetAddresses['GOV']); //window.maker.getToken(ETH);
     const [ethHot, ethCold] = await Promise.all([
-      ethToken.balanceOf(hotAddress).call(),
-      ethToken.balanceOf(coldAddress).call()
+      ethToken.balanceOf(hotAddress).call()
+      //ethToken.balanceOf(coldAddress).call()
     ]);
     console.log('got ethHot', ethHot, 'ethCold', ethCold);
     this.setState({

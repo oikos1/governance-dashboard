@@ -42,8 +42,10 @@ class Timer extends Component {
   constructor(props) {
     super(props);
     const timeLeft =
-      Math.floor(props.endTimestamp / 1000) -
-      Math.floor(new Date().getTime() / 1000);
+      //Math.floor(props.endTimestamp / 1000) -
+      Math.floor(new Date(props.endTimestamp).getTime() / 1000);
+    Math.floor(new Date().getTime() / 1000);
+
     if (timeLeft <= 0) {
       this.state = {
         timeLeft: 0,

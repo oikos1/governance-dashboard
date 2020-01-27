@@ -156,7 +156,7 @@ class PollingVote extends Component {
                     }}
                   >
                     <VoteImpactHeading>Total voting weight</VoteImpactHeading>
-                    <MkrAmt>{formatRound(pollVotingPower, 3)}</MkrAmt>
+                    <MkrAmt>{pollVotingPower}</MkrAmt>
                   </div>
                   <div
                     style={{

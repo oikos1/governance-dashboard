@@ -5,8 +5,32 @@ import { loadContract } from '../utils/ethereum';
 
 const mainnetAddresses = require('../chain/addresses/mainnet.json');
 
-const paddedBytes32ToAddress = hex =>
-  hex.length > 42 ? '0x' + takeLast(40, hex) : hex;
+// Writes -----------------------------------------------
+
+const etch = addresses => {
+  return this._chiefContract().etch(addresses);
+};
+
+const lift = address => {
+  return this._chiefContract().lift(address);
+};
+
+export const Vote = async picks => {
+  const x = await loadContract(mainnetAddresses['CHIEF']);
+  //if (Array.isArray(picks))
+  return x.vote(picks).send();
+  //return this._chiefContract()['vote(bytes32)'](picks);
+};
+
+const lock = (amt, unit = MKR) => {
+  //  const mkrAmt = getCurrency(amt, unit).toFixed('wei');
+  //  return this._chiefContract().lock(mkrAmt);
+};
+
+const free = (amt, unit = MKR) => {
+  //const mkrAmt = getCurrency(amt, unit).toFixed('wei');
+  //return this._chiefContract().free(mkrAmt);
+};
 
 const getLockLogs = async () => {
   const chiefAddress = mainnetAddresses['CHIEF'];
@@ -16,7 +40,7 @@ const getLockLogs = async () => {
 
   console.log('getting events for contract', chiefAddress);
 
-  for (var i = 1; i <= 1; i++) {
+  for (var i = 1; i <= 2; i++) {
     tronGrid.contract
       .getEvents(chiefAddress, { event_name: 'LogNote', block_number: i })
       .then(locks => {
@@ -108,14 +132,13 @@ export const getVoteTally = async () => {
 
 export const getVotedSlate = async address => {
   const x = await loadContract(mainnetAddresses['CHIEF']);
-
-  return x.votes(address).call();
+  return await x.votes(address).call();
 };
 
 export const getNumDeposits = async address => {
   const x = await loadContract(mainnetAddresses['CHIEF']);
 
-  return x.deposits(address).call();
+  return await x.deposits(address).call();
 };
 
 export const getApprovalCount = address => {
@@ -130,13 +153,15 @@ export const getHat = () => {
 
 export const getSlateAddresses = async (slateHash, i = 0) => {
   const x = await loadContract(mainnetAddresses['CHIEF']);
-  const y = await x.slates(slateHash, i);
-  const z = await getSlateAddresses(slateHash, i + 1);
-  // try {
-  return [y].concat(z);
-  //} catch (_) {
-  //   return [];
-  //}
+
+  try {
+    const y = await x.slates(slateHash, i).call();
+    const z = await getSlateAddresses(slateHash, i + 1);
+    console.log('returning', [y].concat(z));
+    return [y].concat(z);
+  } catch (_) {
+    return [];
+  }
 };
 
 export const getLockAddressLogs = () => {
@@ -162,6 +187,9 @@ export const getEtchSlateLogs = () => {
 };
 
 // Internal --------------------------------------------
+
+const paddedBytes32ToAddress = hex =>
+  hex.length > 42 ? '0x' + takeLast(40, hex) : hex;
 
 const _chiefContract = ({ web3js = false } = {}) => {
   if (web3js) return this.get('smartContract').getWeb3ContractByName(CHIEF);
