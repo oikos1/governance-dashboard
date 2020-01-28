@@ -280,7 +280,7 @@ export const addSingleWalletAccount = account => async dispatch => {
     mkrBalance: promiseRetry({
       fn: async () => await mkrToken.balanceOf(account.address).call()
     }),
-    hasProxy: true,
+    hasProxy: false,
     singleWallet: true,
     proxyRole: '',
     votingFor: currProposal,

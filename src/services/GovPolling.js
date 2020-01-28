@@ -1,8 +1,10 @@
 import { POLLING } from '../utils/constants';
 import { MKR } from '../utils/constants';
 import { GetAllWhitelistedPolls } from './GovQueryApi';
+import { loadContract } from '../utils/ethereum';
 
 const POSTGRES_MAX_INT = 2147483647;
+const mainnetAddresses = require('../chain/addresses/mainnet.json');
 
 const createPoll = async (startDate, endDate, multiHash, url) => {
   const txo = await this._pollingContract().createPoll(
@@ -44,14 +46,45 @@ const getPoll = async multiHash => {
 };
 
 const _getPoll = async pollId => {
-  const polls = await this.getAllWhitelistedPolls();
-  return polls.find(p => parseInt(p.pollId) === parseInt(pollId));
+  const polls = await getAllWhitelistedPolls();
+  console.log('_getPoll', polls.activePolls.nodes);
+  return polls.activePolls.nodes.find(
+    p => parseInt(p.pollId) === parseInt(pollId)
+  );
 };
 
 export const getAllWhitelistedPolls = async () => {
-  //if (this.polls) return this.polls;
+  //if (polls) return polls;
   let polls = await GetAllWhitelistedPolls();
+  console.log('getAllWhitelistedPolls', polls);
   return polls;
+};
+
+export const getMkrAmtVoted = async pollId => {
+  const { endBlock } = await _getPoll(pollId);
+  let d = new Date(endBlock);
+  const endUnix = Math.floor(d.getTime() / 1000);
+
+  console.log('got endDate', endBlock, 'endUnix', endUnix);
+
+  //const endBlock = await this.get('govQueryApi').getBlockNumber(endUnix);
+  //const weights = await this.get('govQueryApi').getMkrSupport(
+  //  pollId,
+  //  endBlock
+  //);
+  //return MKR(weights.reduce((acc, cur) => acc + cur.mkrSupport, 0));
+  return 0;
+};
+
+export const getPercentageMkrVoted = async pollId => {
+  let c = await loadContract(mainnetAddresses['GOV']);
+  console.log('got c', c);
+  const [voted, total] = await Promise.all([
+    getMkrAmtVoted(pollId),
+    await c.totalSupply().call()
+  ]);
+  return (voted / total) * 100;
+  //.toNumber();
 };
 
 export const getWinningProposal = async pollId => {

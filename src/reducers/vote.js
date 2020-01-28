@@ -112,6 +112,7 @@ const updateVotingFor = (
 };
 
 export const sendVote = proposalAddress => (dispatch, getState) => {
+  console.log('sendVote', proposalAddress);
   const activeAccount = getAccount(
     getState(),
     window.tronWeb.defaultAddress.hex
@@ -152,6 +153,7 @@ export const sendVote = proposalAddress => (dispatch, getState) => {
 
   let voteExec;
   if (activeAccount.singleWallet) {
+    console.log('voteExec', sortBytesArray(slate), slate);
     voteExec = Vote(sortBytesArray(slate));
   } else {
     //voteExec = window.maker

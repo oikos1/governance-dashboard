@@ -46,6 +46,7 @@ export const generateCallData = ({ method, args = [] }) => {
   let val = '';
   for (let i = 0; i < args.length; i++) val += padLeft(args[i], 64);
   const data = method + val;
+  console.log('generateCallData', data);
   return data;
 };
 

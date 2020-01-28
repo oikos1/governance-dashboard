@@ -150,12 +150,6 @@ const Introduction = ({
         >
           <Grid gridRowGap="m" gridTemplateColumns="1fr">
             <WalletCard
-              onClick={onLinkedWallet}
-              imgSrc={linkedWallet}
-              title="Vote with a linked wallet"
-              subtitle="We support Metamask, Ledger and Trezor."
-            />
-            <WalletCard
               onClick={onSingleWallet}
               imgSrc={walletIcon}
               title="Vote with a single wallet"

@@ -18,7 +18,14 @@ const lift = address => {
 export const Vote = async picks => {
   const x = await loadContract(mainnetAddresses['CHIEF']);
   //if (Array.isArray(picks))
-  return x.vote(picks).send();
+  console.log('Vote, picks', picks);
+  //return
+  let y = x['vote(address[])'](picks)
+    .send()
+    .then(res => {
+      console.log('got response', res);
+    });
+  return y;
   //return this._chiefContract()['vote(bytes32)'](picks);
 };
 

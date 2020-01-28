@@ -6,6 +6,7 @@ import { addToastWithTimeout, ToastTypes } from './toasts';
 import { TransactionStatus } from '../utils/constants';
 import { generateIPFSHash } from '../utils/ipfs';
 import { GetAllWhitelistedPolls } from '../services/GovQueryApi';
+import { getMkrAmtVoted, getPercentageMkrVoted } from '../services/GovPolling';
 
 // Constants ----------------------------------------------
 
@@ -132,9 +133,9 @@ export const withdrawVoteForPoll = pollId => async dispatch => {
 };*/
 
 export const getOptionVotingFor = (address, pollId) => async dispatch => {
-  let optionId = await window.maker
-    .service('govPolling')
-    .getOptionVotingFor(address, pollId);
+  let optionId = 1; //await window.maker
+  //.service('govPolling')
+  //.getOptionVotingFor(address, pollId);
 
   // Option "0" from the plugin is "abstain", but the FE doesn't use "abstain".
   if (optionId === 0) optionId = null;
@@ -220,15 +221,15 @@ export const updateVoteBreakdown = pollId => (dispatch, getState) => {
 export const getVoteBreakdown = async (pollId, options, endDate) => {
   // returns either the block on which this poll ended,
   // or, if the poll hasn't ended, the current block
-  const pollEndBlock = await window.maker
-    .service('govQueryApi')
-    .getBlockNumber(Math.floor(endDate.getTime() / 1000));
+  const pollEndBlock = 90000; //await window.maker
+  //.service('govQueryApi')
+  //.getBlockNumber(Math.floor(endDate.getTime() / 1000));
 
-  const mkrSupport = await window.maker
-    .service('govQueryApi')
-    .getMkrSupport(pollId, pollEndBlock);
+  const mkrSupport = 0; //await window.maker
+  //.service('govQueryApi')
+  //.getMkrSupport(pollId, pollEndBlock);
 
-  const voteBreakdown = options.reduce((result, val, index) => {
+  /*const voteBreakdown = options.reduce((result, val, index) => {
     // correct for option 0: abstain here:
     const matchingOption = mkrSupport.find(
       x => parseInt(x.optionId) - 1 === index
@@ -255,37 +256,34 @@ export const getVoteBreakdown = async (pollId, options, endDate) => {
     return result;
   }, []);
 
-  voteBreakdown.sort((a, b) => a.optionId - b.optionId);
+  voteBreakdown.sort((a, b) => a.optionId - b.optionId);*/
 
-  return voteBreakdown;
+  return 0; //voteBreakdown;
 };
 
 export const getTotalVotes = async pollId => {
-  const totalVotes = await window.maker
-    .service('govPolling')
-    .getMkrAmtVoted(pollId);
-  return totalVotes.toNumber();
+  const totalVotes = await getMkrAmtVoted(pollId);
+  console.log('getTotalVotes', totalVotes);
+  return totalVotes; //.toNumber();
 };
 
 export const getParticipation = async pollId => {
-  const participation = await window.maker
-    .service('govPolling')
-    .getPercentageMkrVoted(pollId);
+  const participation = await getPercentageMkrVoted(pollId);
   return participation;
 };
 
 export const getNumUniqueVoters = async pollId => {
-  const numUniqueVoters = await window.maker
-    .service('govPolling')
-    .getNumUniqueVoters(pollId);
-  return numUniqueVoters;
+  //const numUniqueVoters = await window.maker
+  //  .service('govPolling')
+  //  .getNumUniqueVoters(pollId);
+  return 0;
 };
 
 export const getWinningProposal = async pollId => {
-  const winningProposal = window.maker
-    .service('govPolling')
-    .getWinningProposal(pollId);
-  return winningProposal;
+  //const winningProposal = window.maker
+  //  .service('govPolling')
+  //  .getWinningProposal(pollId);
+  return null;
 };
 
 export const pollsInit = () => async dispatch => {

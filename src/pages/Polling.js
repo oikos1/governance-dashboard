@@ -459,7 +459,17 @@ class Polling extends React.Component {
                   },
                   {
                     name: 'Started',
-                    value: poll.startDate
+                    value: new Date(poll.startDate).toLocaleDateString(
+                      'en-GB',
+                      {
+                        weekday: 'short',
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: 'numeric'
+                      }
+                    )
                   },
                   {
                     name: timeLeftString,
