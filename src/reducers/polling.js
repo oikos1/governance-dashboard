@@ -5,8 +5,16 @@ import { formatRound, check } from '../utils/misc';
 import { addToastWithTimeout, ToastTypes } from './toasts';
 import { TransactionStatus } from '../utils/constants';
 import { generateIPFSHash } from '../utils/ipfs';
-import { GetAllWhitelistedPolls } from '../services/GovQueryApi';
-import { getMkrAmtVoted, getPercentageMkrVoted } from '../services/GovPolling';
+import {
+  GetAllWhitelistedPolls,
+  getBlockNumber,
+  test
+} from '../services/GovQueryApi';
+import {
+  getMkrAmtVoted,
+  getPercentageMkrVoted,
+  vote
+} from '../services/GovPolling';
 
 // Constants ----------------------------------------------
 
@@ -31,8 +39,8 @@ const mainnetAddresses = require('../chain/addresses/mainnet.json');
 
 const handleTx = ({ prefix, dispatch, txObject }) =>
   new Promise(resolve => {
-    const txMgr = window.maker.service('transactionManager');
-    txMgr.listen(txObject, {
+    //const txMgr = window.maker.service('transactionManager');
+    /*txMgr.listen(txObject, {
       pending: tx => {
         dispatch({
           type: `poll/${prefix}_SENT`,
@@ -48,6 +56,31 @@ const handleTx = ({ prefix, dispatch, txObject }) =>
         dispatch(addToastWithTimeout(ToastTypes.ERROR, err));
         resolve(false);
       }
+    });*/
+
+    console.log('checking txObject', txObject);
+
+    let ret = window.tronWeb.trx.getTransaction(txObject).then(r => {
+      console.log('got ret', r['ret'], r);
+      if (r.ret != null || r['ret'] != null) {
+        if (r.ret[0].contractRet == 'SUCCESS') {
+          console.log('SUCCESS!!!', r);
+          dispatch({ type: `poll/${prefix}_SUCCESS` });
+          resolve(true);
+          //this.logTransactionConfirmed(r);
+        } else {
+          //this.logTransactionFailed(tx);
+          resolve(false);
+        }
+      } else {
+        //setTimeout(handleTx.bind(null, txObject), 3000);
+        setTimeout(handleTx, 3000, {
+          txObject: txObject,
+          prefix: prefix,
+          dispatch
+        });
+      }
+      //resolve(false);
     });
   });
 
@@ -87,35 +120,35 @@ export const voteForPoll = (pollId, optionId) => async dispatch => {
 
   // increment the optionId to give the plugin the correct ID
   const optionIdToVoteFor = parseInt(optionId) + 1;
-  const pollVote = window.maker
-    .service('govPolling')
-    .vote(pollId, optionIdToVoteFor);
+  const pollVote = await vote(pollId, optionIdToVoteFor);
   const success = await handleTx({
     txObject: pollVote,
     prefix: 'VOTE',
     dispatch
   });
-
-  if (success) {
-    dispatch(setOptionVotingFor(pollId, optionId));
-    dispatch(updateVoteBreakdown(pollId));
-  }
+  //console.log("success", success)
+  //if (success) {
+  dispatch(setOptionVotingFor(pollId, optionId));
+  dispatch(updateVoteBreakdown(pollId));
+  //}
+  // dispatch(setOptionVotingFor(pollId, optionId));
+  // dispatch(updateVoteBreakdown(pollId));
 };
 
 export const withdrawVoteForPoll = pollId => async dispatch => {
   dispatch({ type: POLL_VOTE_REQUEST });
 
-  const pollVote = window.maker.service('govPolling').vote(pollId, 0);
+  const pollVote = await vote(pollId, 0);
   const success = await handleTx({
     txObject: pollVote,
     prefix: 'VOTE',
     dispatch
   });
 
-  if (success) {
-    dispatch(setOptionVotingFor(pollId, null));
-    dispatch(updateVoteBreakdown(pollId));
-  }
+  //if (success) {
+  dispatch(setOptionVotingFor(pollId, null));
+  dispatch(updateVoteBreakdown(pollId));
+  //}
 };
 
 // Reads ---
@@ -133,9 +166,7 @@ export const withdrawVoteForPoll = pollId => async dispatch => {
 };*/
 
 export const getOptionVotingFor = (address, pollId) => async dispatch => {
-  let optionId = 1; //await window.maker
-  //.service('govPolling')
-  //.getOptionVotingFor(address, pollId);
+  let optionId = await test(address, pollId);
 
   // Option "0" from the plugin is "abstain", but the FE doesn't use "abstain".
   if (optionId === 0) optionId = null;
@@ -197,6 +228,7 @@ export const updateVoteBreakdown = pollId => (dispatch, getState) => {
   const poll = getState().polling.polls.find(poll => poll.pollId === pollId);
   if (!poll) return;
   const { options, endDate } = poll;
+
   async function checkForVoteBreakdownUpdates(triesRemaining) {
     if (triesRemaining === 0) return;
     const voteBreakdown = await getVoteBreakdown(pollId, options, endDate);
@@ -221,9 +253,9 @@ export const updateVoteBreakdown = pollId => (dispatch, getState) => {
 export const getVoteBreakdown = async (pollId, options, endDate) => {
   // returns either the block on which this poll ended,
   // or, if the poll hasn't ended, the current block
-  const pollEndBlock = 90000; //await window.maker
-  //.service('govQueryApi')
-  //.getBlockNumber(Math.floor(endDate.getTime() / 1000));
+  const pollEndBlock = await getBlockNumber(
+    Math.floor(new Date(endDate).getTime())
+  );
 
   const mkrSupport = 0; //await window.maker
   //.service('govQueryApi')
@@ -323,7 +355,7 @@ export const pollsInit = () => async dispatch => {
             voteId: 'testVoteIdHashed',
             title: 'test',
             summary: 'Test summary Lorem ipsum dixit',
-            options: {},
+            options: [1, 2],
             discussion_link: 'http://reddit.com/r/oikos/testlink',
             content:
               'Test content fill me with Lorem ipsum dixit Lorem ipsum dixit'

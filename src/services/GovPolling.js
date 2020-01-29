@@ -21,8 +21,10 @@ const withdrawPoll = pollId => {
   return this._pollingContract().withdrawPoll(pollId);
 };
 
-const vote = (pollId, optionId) => {
-  return this._pollingContract().vote(pollId, optionId);
+export const vote = async (pollId, optionId) => {
+  let x = await loadContract(mainnetAddresses['POLLING']);
+  let y = await x.vote(pollId, optionId).send();
+  return y;
 };
 
 const _pollingContract = () => {

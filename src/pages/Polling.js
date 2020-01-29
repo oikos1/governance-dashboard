@@ -287,8 +287,12 @@ class VotingPanel extends React.Component {
 
 const timeLeft = (startDate, endDate, active) => {
   const now = new Date();
-  let timeLeft = Math.floor(endDate / 1000) - Math.floor(now / 1000);
+  const then = new Date(endDate);
+  let timeLeft = Math.floor(then / 1000) - Math.floor(now / 1000);
   const days = Math.floor(timeLeft / (3600 * 24));
+
+  console.log('timeLeft', now, Math.floor(then / 1000), Math.floor(now / 1000));
+
   const Sday = days !== 1 ? 's' : '';
   timeLeft -= days * 3600 * 24;
   const hours = Math.floor(timeLeft / 3600);

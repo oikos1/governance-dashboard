@@ -51,26 +51,19 @@ export const getQueryResponse = async (serverUrl, query) => {
   return data;
 };
 
-export const getQueryResponseMemoized = (serverUrl, query) => {
-  let cacheKey = `${serverUrl};${query}`;
-  if (this.queryPromises[cacheKey]) return this.queryPromises[cacheKey];
-  this.queryPromises[cacheKey] = this.getQueryResponse(serverUrl, query);
-  return this.queryPromises[cacheKey];
+export const getBlockNumber = async unixTime => {
+  let date = new Date(unixTime);
+  if (date.getTime() >= new Date().getTime())
+    console.log('getBlockNumber', { currentBlock: 'lastBlock' });
+  return { currentBlock: 'lastBlock' };
+
+  const query = `{
+      dateBlock(argUnix: ${date})
+    }`;
+  const response = await getQueryResponse('http://localhost:31337/v1', query);
+  return response.timeToBlockNumber.nodes[0];
 };
 
-/*  initialize(settings) {
-    if (settings.staging) {
-      this.staging = true;
-    }
-  }
-
-  connect() {
-    const network = this.get('web3').network;
-    this.serverUrl = this.staging
-      ? netIdtoSpockUrlStaging(network)
-      : netIdtoSpockUrl(network);
-  }
-*/
 export const GetAllWhitelistedPolls = async () => {
   const query = `{ activePolls { nodes { creator pollId startBlock endBlock} } }`;
 
@@ -86,6 +79,14 @@ export const GetAllWhitelistedPolls = async () => {
   return response;
 };
 
+export const test = async (address, pollId) => {
+  console.log('querying for address', address, 'pollId', pollId);
+  const query = `{ currentVote(address: "${address}", pollid: ${pollId}) }`;
+  const response = await getQueryResponse('http://localhost:31337/v1', query);
+  console.log('got response from currentVote', JSON.stringify(response));
+  //if (!response.currentVote.nodes[0]) return null;
+  return response.currentVote;
+};
 /*
   export getNumUniqueVoters = (pollId) => {
     const query = `{uniqueVoters(argPollId:${pollId}){

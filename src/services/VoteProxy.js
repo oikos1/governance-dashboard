@@ -29,8 +29,9 @@ const freeAll = proxyAddress => {
 
 const voteExec = (proxyAddress, picks) => {
   if (Array.isArray(picks))
-    return this._proxyContract(proxyAddress)['vote(address[])'](picks);
-  return this._proxyContract(proxyAddress)['vote(bytes32)'](picks);
+    //  return this._proxyContract(proxyAddress)['vote(address[])'](picks);
+    //return this._proxyContract(proxyAddress)['vote(bytes32)'](picks);
+    return;
 };
 
 // Reads ------------------------------------------------
@@ -60,15 +61,16 @@ export const getVoteProxy = async addressToCheck => {
 
   const otherRole = role === 'hot' ? 'cold' : 'hot';
   const otherAddress = await _getAddressOfRole(proxy, otherRole);
-  return {
+  let proxyObj = {
     hasProxy,
     voteProxy: new VoteProxy({
-      voteProxyService: null,
-      proxyAddress,
-      [`${role}Address`]: addressToCheck,
+      proxy,
+      [`${role}Address`]: proxy,
       [`${otherRole}Address`]: otherAddress
     })
   };
+  console.log('Created proxyObj', JSON.stringify(proxyObj));
+  return proxyObj;
 };
 
 // Internal --------------------------------------------

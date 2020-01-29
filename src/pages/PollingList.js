@@ -195,7 +195,9 @@ export const VotingWeightBanner = ({ accountsFetching, activeAccount }) => {
 
   // mkr in wallet + mkr locked in chief (including mkr locked via a vote proxy)
   const pollVotingPower = add(
-    activeAccount.proxy.votingPower,
+    activeAccount.hasProxy
+      ? activeAccount.proxy.votingPower
+      : activeAccount.votingPower,
     activeAccount.mkrBalance
   );
 
@@ -206,7 +208,9 @@ export const VotingWeightBanner = ({ accountsFetching, activeAccount }) => {
       <FadeIn>
         <SmallMediumText>
           <Strong>Connected wallet: </Strong>
-          <Black>{Number(pollVotingPower) / 10 ** 18} MKR</Black>{' '}
+          <Black>
+            {formatRound(Number(pollVotingPower) / 10 ** 18, 3)} MKR
+          </Black>{' '}
         </SmallMediumText>
       </FadeIn>
     );

@@ -274,30 +274,58 @@ export const addSingleWalletAccount = account => async dispatch => {
     (await iouToken.allowance(account.address, chiefAddress).call()) >
     MAX_UINT_ETH_BN;
 
+  const { hasProxy, voteProxy } = await getVoteProxy(account.address);
+
+  let proxy = null;
+
+  let singleWallet = null;
+
+  if (!hasProxy) {
+    singleWallet = false;
+  } else {
+    console.log('dumping two var ----------->', hasProxy, voteProxy);
+    const votingPowerProxy = await mkrToken
+      .allowance(account.address, voteProxy._hotAddress)
+      .call();
+    proxy = {
+      address: voteProxy._hotAddress,
+      votingPower: await getNumDeposits(account.address),
+      hasInfMkrApproval: votingPowerProxy, //> MAX_UINT_ETH_BN,
+      hasInfIouApproval: hasInfIouApproval,
+      //mkrToken
+      //.allowance(account.address, voteProxy.getProxyAddress())
+      //.then(val => val.eq(MAX_UINT_ETH_BN)),
+      linkedAccount: '' // linkedAccountData()
+    };
+    singleWallet = true;
+  }
+  /*{
+            address: '',
+            votingPower: 0,
+            hasInfIouApproval: false,
+            hasInfMkrApproval: false,
+            linkedAccount: {}
+          }*/
+
   const _payload = {
     ...account,
     address: account.address,
     mkrBalance: promiseRetry({
       fn: async () => await mkrToken.balanceOf(account.address).call()
     }),
-    hasProxy: false,
-    singleWallet: true,
+    hasProxy: hasProxy,
+    singleWallet: singleWallet,
     proxyRole: '',
     votingFor: currProposal,
     hasInfMkrApproval,
     hasInfIouApproval,
-    proxy: {
-      votingPower,
-      address: account.address,
-      hasInfMkrApproval,
-      hasInfIouApproval,
-      linkedAccount: ''
-    }
+    proxy: proxy
   };
 
   try {
     const payload = await promisedProperties(_payload);
     console.log('got payload', payload);
+    setActiveAccount(account.address);
     dispatch({ type: ADD_ACCOUNT, payload });
   } catch (e) {
     console.error('failed to add account', e);
@@ -345,6 +373,7 @@ export const addMetamaskAccount = address => async (dispatch, getState) => {
 
 export const setActiveAccount = address => async (dispatch, getState) => {
   const state = getState();
+  //console.log("setActiveAccount dumping state", JSON.stringify(state), "account", getAccount(state, address));
 
   try {
     //window.maker.useAccountWithAddress(address);
@@ -537,7 +566,7 @@ const accounts = createReducer(initialState, {
     if (!Object.values(AccountTypes).includes(account.type)) {
       throw new Error(`Unrecognized account type: "${account.type}"`);
     }
-
+    console.log('adding account to state', [account], state.allAccounts);
     return {
       ...state,
       allAccounts: uniqConcat([account], state.allAccounts)

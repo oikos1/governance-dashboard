@@ -20,11 +20,7 @@ export const Vote = async picks => {
   //if (Array.isArray(picks))
   console.log('Vote, picks', picks);
   //return
-  let y = x['vote(address[])'](picks)
-    .send()
-    .then(res => {
-      console.log('got response', res);
-    });
+  let y = await x['vote(address[])'](picks).send();
   return y;
   //return this._chiefContract()['vote(bytes32)'](picks);
 };

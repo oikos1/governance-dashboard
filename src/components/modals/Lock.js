@@ -7,6 +7,7 @@ import { modalClose } from '../../reducers/modal';
 import AmountInput from './shared/AmountInput';
 import MKRApprove from './MKRApprove';
 import TransactionModal from './shared/InitiateTransaction';
+import { formatRound } from '../../utils/misc';
 
 import { StyledTop, StyledTitle, StyledBlurb } from './shared/styles';
 
@@ -63,7 +64,7 @@ const Lock = ({
             <AmountInput
               buttonLabel="Lock MKR"
               amountLabel="MKR balance"
-              maxAmount={balance}
+              maxAmount={Number(balance) / 10 ** 18}
               skip={modalClose}
               onSubmit={amount => {
                 lock(amount);

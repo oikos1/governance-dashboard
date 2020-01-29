@@ -69,6 +69,7 @@ const TextButton = styled.span`
 `;
 
 const WelcomeBanner = ({ onboardingOpen, activeAccount }) => {
+  console.log('WelcomeBanner', onboardingOpen, activeAccount);
   return (
     <Banner>
       <Content>
@@ -121,6 +122,7 @@ const VoterStatus = ({
   onboardingState,
   legacy
 }) => {
+  console.log('VoterStatus got account', account);
   if (fetching) {
     return (
       <Padding>

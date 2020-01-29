@@ -41,50 +41,72 @@ const handleTx = ({
   proposalAddresses = []
 }) =>
   new Promise(resolve => {
-    /*const txMgr = window.maker.service('transactionManager');
-    txMgr.listen(txObject, {
+    //const txMgr = window.maker.service('transactionManager');
+    /*txMgr.listen(txObject, {
       pending: tx => {
         dispatch({
-          type: `vote/${prefix}_SENT`,
+          type: `poll/${prefix}_SENT`,
           payload: { txHash: tx.hash }
         });
       },
       mined: _ => {
-        dispatch({ type: `vote/${prefix}_SUCCESS` });
-        ReactGA.event({
-          category: `${prefix} success`,
-          action: prefix,
-          label: `wallet type ${acctType || 'unknown'}`
-        });
-        // give infura time to catch up
-        setTimeout(
-          () => {
-            dispatch(voteTallyInit());
-            dispatch(hatInit());
-            dispatch(initApprovalsFetch());
-          },
-          acctType === 'ledger' || acctType === 'trezor' ? 5000 : 2000
-        ); // there is no science here
-
-        updateVotingFor(
-          dispatch,
-          getState,
-          activeAccount,
-          proposalAddresses.map(address => address.toLowerCase())
-        );
-        resolve();
+        dispatch({ type: `poll/${prefix}_SUCCESS` });
+        resolve(true);
       },
       error: (_, err) => {
-        dispatch({ type: `vote/${prefix}_FAILURE`, payload: err });
+        dispatch({ type: `poll/${prefix}_FAILURE`, payload: err });
         dispatch(addToastWithTimeout(ToastTypes.ERROR, err));
-        ReactGA.event({
-          category: 'User notification error',
-          action: 'vote',
-          label: parseError(err)
-        });
-        resolve();
+        resolve(false);
       }
     });*/
+
+    console.log('checking txObject', txObject);
+
+    let ret = window.tronWeb.trx.getTransaction(txObject).then(r => {
+      console.log('got ret', r['ret'], r);
+      if (r.ret != null || r['ret'] != null) {
+        if (r.ret[0].contractRet == 'SUCCESS') {
+          console.log('SUCCESS!!!', r);
+          dispatch({ type: `vote/${prefix}_SUCCESS` });
+
+          // give infura time to catch up
+          setTimeout(
+            () => {
+              dispatch(voteTallyInit());
+              dispatch(hatInit());
+              dispatch(initApprovalsFetch());
+            },
+            acctType === 'ledger' || acctType === 'trezor' ? 5000 : 2000
+          ); // there is no science here
+
+          updateVotingFor(
+            dispatch,
+            getState,
+            activeAccount,
+            proposalAddresses.map(address => address.toLowerCase())
+          );
+          resolve();
+          //this.logTransactionConfirmed(r);
+        } else {
+          dispatch({ type: `vote/${prefix}_FAILURE`, payload: 'err' });
+          dispatch(addToastWithTimeout(ToastTypes.ERROR, 'err'));
+
+          resolve();
+        }
+      } else {
+        //setTimeout(handleTx.bind(null, txObject), 3000);
+        setTimeout(handleTx, 3000, {
+          prefix,
+          dispatch,
+          getState,
+          txObject,
+          acctType,
+          activeAccount,
+          proposalAddresses
+        });
+      }
+      //resolve(false);
+    });
   });
 
 const updateVotingFor = (
@@ -99,8 +121,9 @@ const updateVotingFor = (
     votingFor: proposalAddresses
   };
   dispatch({ type: UPDATE_ACCOUNT, payload: updatedActiveAcc });
+  console.log('got state', getState);
   const linkedAccount = getAccount(
-    getState(),
+    getState,
     activeAccount.proxy.linkedAccount.address
   );
   if (!linkedAccount) return;
@@ -111,7 +134,7 @@ const updateVotingFor = (
   dispatch({ type: UPDATE_ACCOUNT, payload: updatedLinkedAcc });
 };
 
-export const sendVote = proposalAddress => (dispatch, getState) => {
+export const sendVote = proposalAddress => async (dispatch, getState) => {
   console.log('sendVote', proposalAddress);
   const activeAccount = getAccount(
     getState(),
@@ -154,17 +177,20 @@ export const sendVote = proposalAddress => (dispatch, getState) => {
   let voteExec;
   if (activeAccount.singleWallet) {
     console.log('voteExec', sortBytesArray(slate), slate);
-    voteExec = Vote(sortBytesArray(slate));
+    voteExec = await Vote(sortBytesArray(slate));
   } else {
     //voteExec = window.maker
     //  .service('voteProxy')
     //  .voteExec(activeAccount.proxy.address, sortBytesArray(slate));
   }
 
+  const { accounts } = getState();
+  console.log('got Tx object', voteExec, 'getState accounts', accounts);
+
   return handleTx({
     prefix: 'VOTE',
     dispatch,
-    getState,
+    getState: getState(),
     txObject: voteExec,
     acctType: activeAccount.type,
     activeAccount,
@@ -173,7 +199,10 @@ export const sendVote = proposalAddress => (dispatch, getState) => {
 };
 
 export const withdrawVote = proposalAddress => (dispatch, getState) => {
-  const activeAccount = getAccount(getState(), window.maker.currentAddress());
+  const activeAccount = getAccount(
+    getState(),
+    window.tronWeb.defaultAddress.hex
+  );
   if (
     !activeAccount ||
     (!activeAccount.hasProxy && !activeAccount.singleWallet)
