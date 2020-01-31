@@ -39,11 +39,12 @@ class LockMKR extends React.Component {
 
     let storageWallet = this.props.coldWallet;
     let votingWallet = this.props.hotWallet;
+
     // if we're not using a proxy, assign hot/cold wallet to the single wallet to keep behavior intact
-    if (this.props.skipProxy) {
-      storageWallet = this.props.singleWallet;
-      votingWallet = this.props.singleWallet;
-    }
+    //if (this.props.skipProxy) {
+    storageWallet = this.props.singleWallet;
+    votingWallet = this.props.singleWallet;
+    //}
 
     this.state = {
       step: 0,
@@ -53,6 +54,8 @@ class LockMKR extends React.Component {
       storageWallet,
       votingWallet
     };
+
+    console.log('LockMKR set state to', this.state);
   }
 
   toChooseDepositAmount = () => {
@@ -142,7 +145,8 @@ class LockMKR extends React.Component {
                 <div>
                   <Label mb="s">Available MKR</Label>
                   <div>
-                    {this.state.storageWallet.mkrBalance} MKR available to vote
+                    {[this.state.storageWallet.mkrBalance.toNumber()]} MKR
+                    available to vote
                   </div>
                 </div>
 
@@ -210,7 +214,7 @@ class LockMKR extends React.Component {
                       </Link>
                     </Box>
                     <Box gridRow={['2', '1']} gridColumn={['1/3', '3']}>
-                      {this.state.storageWallet.mkrBalance} MKR
+                      {this.state.storageWallet.mkrBalance.toNumber()} MKR
                     </Box>
                     <Flex justifyContent="flex-end">
                       {this.props.singleWallet ? (
@@ -240,7 +244,7 @@ class LockMKR extends React.Component {
                       <Link fontWeight="semibold">Address hidden</Link>
                     </Box> */}
                     <Box gridRow={['2', '1']} gridColumn={['1/3', '3']}>
-                      {this.state.votingMKR} MKR
+                      {Number(this.state.votingMKR)} MKR
                     </Box>
                     <Flex justifyContent="flex-end">
                       <VotingContractTag />

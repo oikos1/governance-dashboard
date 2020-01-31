@@ -55,7 +55,7 @@ export default ({ setStep, burnAmount, totalMkrInEsm, address, setTxHash }) => {
   const giveProxyMkrAllowance = async () => {
     setMkrApprovePending(true);
     try {
-      // maker.getToken(MKR).approve(esmAddress, MKR(burnAmount));
+      maker.getToken(MKR).approve(esmAddress, MKR(burnAmount));
       setProxyDetails(proxyDetails => ({
         ...proxyDetails,
         hasMkrAllowance: true

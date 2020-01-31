@@ -68,6 +68,7 @@ export const HARDWARE_ACCOUNT_ERROR = 'accounts/HARDWARE_ACCOUNT_ERROR';
 // Selectors ----------------------------------------------
 
 export function getAccount(state, address) {
+  console.log('got state', state);
   return state.accounts.allAccounts.find(a => eq(a.address, address));
 }
 
@@ -276,7 +277,13 @@ export const addSingleWalletAccount = account => async dispatch => {
 
   const { hasProxy, voteProxy } = await getVoteProxy(account.address);
 
-  let proxy = null;
+  let proxy = {
+    address: '',
+    votingPower: 0,
+    hasInfIouApproval: false,
+    hasInfMkrApproval: false,
+    linkedAccount: {}
+  };
 
   let singleWallet = null;
 
@@ -319,7 +326,8 @@ export const addSingleWalletAccount = account => async dispatch => {
     votingFor: currProposal,
     hasInfMkrApproval,
     hasInfIouApproval,
-    proxy: proxy
+    proxy: proxy,
+    defaultProxy: account.defaultProxy
   };
 
   try {
@@ -357,7 +365,10 @@ export const updateAccount = account => ({
   payload: account
 });
 
-export const addMetamaskAccount = address => async (dispatch, getState) => {
+export const addMetamaskAccount = (address, proxy) => async (
+  dispatch,
+  getState
+) => {
   // Only add new accounts that we haven't seen before
   if (getAccount(getState(), address)) return;
 
@@ -365,7 +376,9 @@ export const addMetamaskAccount = address => async (dispatch, getState) => {
     //await window.maker
     //  .service('accounts')
     //  .addAccount({ type: AccountTypes.METAMASK });
-    return dispatch(addAccount({ address, type: AccountTypes.METAMASK }));
+    return dispatch(
+      addAccount({ address, type: AccountTypes.METAMASK, defaultProxy: proxy })
+    );
   } catch (error) {
     dispatch({ type: NO_METAMASK_ACCOUNTS });
   }
@@ -593,7 +606,7 @@ const accounts = createReducer(initialState, {
   [MKR_APPROVE_SUCCESS]: (state, { payload }) => {
     const account = getAccount(
       { accounts: state },
-      window.maker.currentAddress()
+      window.tronWeb.defaultAddress.hex
     );
 
     const updatedAccount =
@@ -615,7 +628,7 @@ const accounts = createReducer(initialState, {
   [IOU_APPROVE_SUCCESS]: state => {
     const account = getAccount(
       { accounts: state },
-      window.maker.currentAddress()
+      window.tronWeb.defaultAddress.hex
     );
     const updatedAccount = {
       ...account,

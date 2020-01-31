@@ -253,7 +253,7 @@ const Sidebar = ({
                   <DataLabel>STORED MKR</DataLabel>
                   <div>
                     <Text t="p2" fontWeight="semibold">
-                      {singleWallet.mkrBalance || 0} MKR
+                      {Number(singleWallet.mkrBalance) || 0} MKR
                     </Text>
                   </div>
                   <SubtitleDataLabel>

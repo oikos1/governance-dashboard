@@ -18,7 +18,6 @@ const Container = styled(Box)`
   transition: transform 0.2s ease-in-out, opacity 0.2s ease-in-out;
   transform: translateX(-10px);
   opacity: 0;
-
   ${props =>
     props.show &&
     `
@@ -53,6 +52,7 @@ const Instructions = props => {
 };
 
 const WalletCard = props => {
+  console.log('got WalletCard', props);
   return (
     <Card py="m" px="l" style={{ cursor: 'pointer' }} {...props}>
       <Grid
@@ -90,7 +90,7 @@ const Introduction = ({
   const walletIcon = Icons[activeAccountType] || singleWallet;
 
   return (
-    <Container show={show} height="100%" position="fixed">
+    <Container show={show} height="100%" position="relative">
       <Grid
         width="100vw"
         height="100%"
@@ -129,25 +129,19 @@ const Introduction = ({
             </Grid>
           </Box>
         </Flex>
-        <Box
-          bg={['white', 'white', 'white', 'transparent']}
-          p="l"
-          gridRow="1"
-          gridColumn={['1', '1', '1', '2']}
-          zIndex="2"
-        >
-          <OnboardingMenu onClose={onClose} />
-        </Box>
+
         <Flex
           p="m"
           bg="backgroundGrey"
           justifyContent="center"
-          alignItems="center"
+          alignItems="left"
           flexDirection="column"
           gridRow={['3', '3', '3', '1 / 3']}
           gridColumn={['1', '1', '1', '2']}
           zIndex="1"
         >
+          <OnboardingMenu onClose={onClose} />
+
           <Grid gridRowGap="m" gridTemplateColumns="1fr">
             <WalletCard
               onClick={onSingleWallet}

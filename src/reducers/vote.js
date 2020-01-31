@@ -198,7 +198,7 @@ export const sendVote = proposalAddress => async (dispatch, getState) => {
   });
 };
 
-export const withdrawVote = proposalAddress => (dispatch, getState) => {
+export const withdrawVote = proposalAddress => async (dispatch, getState) => {
   const activeAccount = getAccount(
     getState(),
     window.tronWeb.defaultAddress.hex
@@ -217,9 +217,7 @@ export const withdrawVote = proposalAddress => (dispatch, getState) => {
 
   let voteExec;
   if (activeAccount.singleWallet) {
-    voteExec = window.maker
-      .service('chief')
-      .vote(sortBytesArray(filteredSlate));
+    voteExec = await Vote(sortBytesArray(filteredSlate));
   } else {
     voteExec = window.maker
       .service('voteProxy')
@@ -229,7 +227,7 @@ export const withdrawVote = proposalAddress => (dispatch, getState) => {
   return handleTx({
     prefix: 'WITHDRAW',
     dispatch,
-    getState,
+    getState: getState(),
     txObject: voteExec,
     acctType: activeAccount.type,
     activeAccount,

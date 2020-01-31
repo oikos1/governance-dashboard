@@ -3,6 +3,9 @@ import take from 'ramda/src/take';
 import BigNumber from 'bignumber.js';
 import round from 'lodash.round';
 import { ETH, MKR } from '../chain/maker';
+import { loadContract } from './ethereum';
+
+const mainnetAddresses = require('../chain/addresses/mainnet.json');
 
 BigNumber.config({ DECIMAL_PLACES: 18, ROUNDING_MODE: 1 });
 
@@ -221,16 +224,12 @@ export const toNum = async promise => {
 };
 
 export const addMkrAndEthBalance = async account => {
+  let x = await loadContract(mainnetAddresses['GEM']);
+  let y = await loadContract(mainnetAddresses['GOV']);
   return {
     ...account,
-    ethBalance: round(
-      await toNum(window.maker.getToken(ETH).balanceOf(account.address)),
-      3
-    ),
-    mkrBalance: round(
-      await toNum(window.maker.getToken(MKR).balanceOf(account.address)),
-      3
-    )
+    ethBalance: round(x.balanceOf(account.address).call(), 3),
+    mkrBalance: round(y.balanceOf(account.address).call(), 3)
   };
 };
 

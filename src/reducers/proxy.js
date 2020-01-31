@@ -76,35 +76,38 @@ const handleTx = ({
   acctType
 }) =>
   new Promise(resolve => {
-    /*const txMgr = null ;
-    window.maker.service('transactionManager');
-    txMgr.listen(txObject, {
-      pending: tx => {
-        dispatch({
-          type: `proxy/${prefix}_SENT`,
-          payload: { txHash: tx.hash }
+    console.log('checking txObject', txObject);
+
+    let ret = window.tronWeb.trx.getTransaction(txObject).then(r => {
+      //console.log('got ret', r['ret'], r);
+      if (r.ret != null || r['ret'] != null) {
+        if (r.ret[0].contractRet == 'SUCCESS') {
+          console.log('SUCCESS!!!', r);
+          dispatch({
+            type: `proxy/${prefix}_SUCCESS`,
+            payload: successPayload
+          });
+
+          resolve(true);
+          //this.logTransactionConfirmed(r);
+        } else {
+          dispatch({ type: `proxy/${prefix}_FAILURE`, payload: 'err' });
+          dispatch(addToastWithTimeout(ToastTypes.ERROR, 'err'));
+
+          resolve(false);
+        }
+      } else {
+        //setTimeout(handleTx.bind(null, txObject), 3000);
+        setTimeout(handleTx, 3000, {
+          prefix,
+          dispatch,
+          txObject,
+          successPayload,
+          acctType
         });
-      },
-      mined: async _ => {
-        dispatch({ type: `proxy/${prefix}_SUCCESS`, payload: successPayload });
-        ReactGA.event({
-          category: `${prefix} success`,
-          action: prefix,
-          label: `wallet type ${acctType || 'unknown'}`
-        });
-        resolve(true);
-      },
-      error: (_, err) => {
-        dispatch({ type: `proxy/${prefix}_FAILURE`, payload: err });
-        dispatch(addToastWithTimeout(ToastTypes.ERROR, err));
-        ReactGA.event({
-          category: 'User notification error',
-          action: 'proxy',
-          label: parseError(err)
-        });
-        resolve(false);
       }
-    });*/
+      //resolve(false);
+    });
   });
 
 function useHotAccount(state) {
@@ -282,7 +285,7 @@ export const breakLink = () => (dispatch, getState) => {
 };
 
 export const mkrApproveSingleWallet = () => async (dispatch, getState) => {
-  const account = getAccount(getState(), window.tronWeb.defaultAddress.base58);
+  const account = getAccount(getState(), window.tronWeb.defaultAddress.hex);
 
   const chiefAddress = mainnetAddresses['CHIEF'];
   //window.maker
@@ -290,41 +293,52 @@ export const mkrApproveSingleWallet = () => async (dispatch, getState) => {
   //  .getContractAddressByName(CHIEF);
 
   const mkr = await loadContract(mainnetAddresses['GOV']);
+  const vPf = await loadContract(mainnetAddresses['VOTE_PROXY_FACTORY']);
 
-  console.log('got mkr', mkr, window.tronWeb.defaultAddress.base58);
+  //console.log('got mkr', mkr, window.tronWeb.defaultAddress.base58);
 
-  const giveChiefAllowance = await mkr
-    .approve(chiefAddress, '100000000000000000000000')
+  /*mkr
+  .approve(chiefAddress, '100000000000000000000000')
     .send({
       shouldPollResponse: true,
       callValue: 0,
       from: window.tronWeb.defaultAddress.hex
+    }).then(async (res) => {*/
+
+  vPf
+    .linkSelf(account.defaultProxy)
+    .send({
+      //shouldPollResponse: true,
+      callValue: 0,
+      from: window.tronWeb.defaultAddress.hex
+    })
+    .then(async res => {
+      dispatch({ type: MKR_APPROVE_REQUEST });
+      return handleTx({
+        prefix: 'MKR_APPROVE',
+        dispatch,
+        txObject: res,
+        acctType: 'BROWSER',
+        successPayload: 'single-wallet'
+      }).then(success => success && dispatch(addSingleWalletAccount(account)));
     });
+
+  // })
 
   //window.maker
   //.getToken(MKR)
   //.approveUnlimited(chiefAddress);
-
-  dispatch({ type: MKR_APPROVE_REQUEST });
-  return handleTx({
-    prefix: 'MKR_APPROVE',
-    dispatch,
-    txObject: giveChiefAllowance,
-    acctType: 'BROWSER',
-    successPayload: 'single-wallet'
-  }).then(success => success && dispatch(addSingleWalletAccount(account)));
 };
 
-export const iouApproveSingleWallet = () => (dispatch, getState) => {
-  const account = getAccount(getState(), window.maker.currentAddress());
+export const iouApproveSingleWallet = () => async (dispatch, getState) => {
+  const account = getAccount(getState(), window.tronWeb.defaultAddress.hex);
 
-  const chiefAddress = window.maker
-    .service('smartContract')
-    .getContractAddressByName(CHIEF);
+  const chiefAddress = mainnetAddresses['CHIEF'];
 
-  const giveChiefAllowance = window.maker
-    .getToken('IOU')
-    .approveUnlimited(chiefAddress);
+  let x = await loadContract(mainnetAddresses['IOU']);
+  const giveChiefAllowance = await x
+    .approve(chiefAddress, Number(100000000000).toString())
+    .send();
 
   dispatch({ type: IOU_APPROVE_REQUEST });
   return handleTx({

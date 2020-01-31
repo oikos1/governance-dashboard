@@ -59,6 +59,18 @@ export const updateMaker = maker => ({
   payload: { maker }
 });
 
+const getQueryResponse = async (serverUrl, query) => {
+  const resp = await fetch(serverUrl + query, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      'Content-type': 'application/json'
+    }
+  });
+  //assert(data, `error fetching data from ${serverUrl}`);
+  return await resp.json();
+};
+
 export const pollForMetamaskChanges = () => async dispatch => {
   try {
     await dispatch(initWeb3Accounts());
@@ -93,7 +105,7 @@ export const checkNetwork = () => async (dispatch, getState) => {
 
 let triedEnabling = false;
 
-export const initWeb3Accounts = () => async (dispatch, getState) => {
+export const initWeb3Accounts = proxy => async (dispatch, getState) => {
   const {
     metamask: { activeAddress, network },
     accounts: { fetching }
@@ -103,7 +115,7 @@ export const initWeb3Accounts = () => async (dispatch, getState) => {
     const address = window.tronWeb.defaultAddress.hex; //window.web3.eth.defaultAccount;
     if (address !== activeAddress) {
       dispatch(updateAddress(address));
-      await dispatch(addMetamaskAccount(address));
+      await dispatch(addMetamaskAccount(address, proxy));
       await dispatch(setActiveAccount(address, true));
       mixpanelIdentify(address, { wallet: 'metamask' });
       mixpanel.track('account-change', {
@@ -150,6 +162,17 @@ export const init = (maker, network = 'mainnet') => async dispatch => {
     dispatch({ type: NO_METAMASK_ACCOUNTS });
     dispatch(notAvailable());
   }
+
+  let x = await getQueryResponse(
+    'http://localhost:31337/getProxy?',
+    'owner=' + window.tronWeb.defaultAddress.hex
+  );
+
+  console.log(
+    'got X -------------------------------------------------------------------------------> ',
+    x
+  );
+
   dispatch(connectSuccess(network));
   dispatch(updateNetwork(network));
   //dispatch(updateMaker(maker));
@@ -159,7 +182,7 @@ export const init = (maker, network = 'mainnet') => async dispatch => {
   dispatch(ethInit());
   dispatch(pollsInit());
   dispatch(esmInit());
-  await dispatch(initWeb3Accounts());
+  await dispatch(initWeb3Accounts(x[0].proxy));
   dispatch(pollForMetamaskChanges());
 };
 
