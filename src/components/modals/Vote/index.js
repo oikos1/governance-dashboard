@@ -43,8 +43,8 @@ class Vote extends Component {
     } = this.props;
     const { proxy, votingFor } = activeAccount;
 
-    const alreadyVotingFor = votingFor.includes(proposal.address.toLowerCase());
-
+    const alreadyVotingFor = votingFor.includes(window.tronWeb.address.toHex(proposal.address).toLowerCase());
+ 
     return (
       <TransactionModal
         txHash={voteTxHash}

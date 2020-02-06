@@ -10,22 +10,32 @@ const WithVote = ({
   proposals = [],
   signaling
 }) => {
+  console.log("got proposals", proposals)
   const proposal = proposals
     .filter(({ govVote }) => govVote === !!signaling)
-    .find(({ source }) => proposalAddresses.includes(source.toLowerCase()));
-  if (proposal !== undefined)
+    .find(({ source }) => {
+      proposalAddresses.includes(window.tronWeb.address.toHex(source).toLowerCase())
+      console.log("got proposal", proposal, "addresses", proposalAddresses, "source", source, "transformed", window.tronWeb.address.toHex(source).toLowerCase(), "found", proposals.find(({ source }) => proposalAddresses.includes(window.tronWeb.address.toHex(source).toLowerCase())))
+
+    });
+      console.log("got proposal", proposal)
+
+  if ( proposals.find(({ source }) => proposalAddresses.includes(window.tronWeb.address.toHex(source).toLowerCase())) !== undefined){
+    let proposal =  proposals.find(({ source }) => proposalAddresses.includes(window.tronWeb.address.toHex(source).toLowerCase()));
     return children({
       proposalTitle: proposal.title,
       noVote: false,
       proposalSlug: `${toSlug(proposal.title)}`,
       topicKey: proposal.topicKey
     });
+  } else {
   return children({
     proposalTitle: '',
     noVote: true,
     proposalSlug: '----',
     topicKey: ''
   });
+  }
 };
 
 WithVote.propTypes = {

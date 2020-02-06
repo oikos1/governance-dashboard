@@ -83,7 +83,7 @@ const handleTx = ({
             dispatch,
             getState,
             activeAccount,
-            proposalAddresses.map(address => address.toLowerCase())
+            proposalAddresses.map(address => window.tronWeb.address.toHex(address))
           );
           resolve();
           //this.logTransactionConfirmed(r);

@@ -184,6 +184,8 @@ function Executive({
     return <NotFound />;
   const { active, topicKey } = proposal;
   const supporters = voteState[proposal.source.toLowerCase()] || null;
+  console.log(votingFor.includes(window.tronWeb.address.toHex(proposal.source).toLowerCase() ))
+
   return (
     <RiseUp>
       <WhiteBackground>
@@ -217,7 +219,7 @@ function Executive({
                   })
                 }
               >
-                {votingFor.includes(proposal.source.toLowerCase())
+                {votingFor.includes(window.tronWeb.address.toHex(proposal.source).toLowerCase())
                   ? 'Withdraw vote'
                   : 'Vote for this Proposal'}
               </Button>

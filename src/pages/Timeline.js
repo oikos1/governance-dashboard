@@ -308,7 +308,7 @@ const Timeline = ({
                       })
                     }
                   >
-                    {votingFor.includes(proposal.source.toLowerCase())
+                    {votingFor.includes(window.tronWeb.address.toHex(proposal.source).toLowerCase())
                       ? 'Withdraw vote'
                       : 'Vote for this Proposal'}
                   </Button>
