@@ -18,7 +18,7 @@ const WithVote = ({
       console.log("got proposal", proposal, "addresses", proposalAddresses, "source", source, "transformed", window.tronWeb.address.toHex(source).toLowerCase(), "found", proposals.find(({ source }) => proposalAddresses.includes(window.tronWeb.address.toHex(source).toLowerCase())))
 
     });
-      console.log("got proposal", proposal)
+      console.log("got proposal", proposals.find(({ source }) => proposalAddresses.includes(window.tronWeb.address.toHex(source).toLowerCase())))
 
   if ( proposals.find(({ source }) => proposalAddresses.includes(window.tronWeb.address.toHex(source).toLowerCase())) !== undefined){
     let proposal =  proposals.find(({ source }) => proposalAddresses.includes(window.tronWeb.address.toHex(source).toLowerCase()));

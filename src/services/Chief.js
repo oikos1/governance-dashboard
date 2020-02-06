@@ -17,12 +17,14 @@ const lift = address => {
 
 export const Vote = async (proxy, picks) => {
   const x = await loadContract(proxy);
-  //if (Array.isArray(picks))
-  console.log('Vote, picks', picks);
-  //return
-  let y = await x['vote(address[])'](picks).send();
-  return y;
-  //return this._chiefContract()['vote(bytes32)'](picks);
+  if (Array.isArray(picks)) {
+  //console.log('Vote, picks', picks);
+    let y = await x['vote(address[])'](picks).send();
+    return y;
+  } else {
+  let x = await x['vote(bytes32)'](picks).send();
+  return x;
+  }
 };
 
 const lock = (amt, unit = MKR) => {
