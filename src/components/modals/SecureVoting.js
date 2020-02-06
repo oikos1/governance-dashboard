@@ -77,7 +77,12 @@ const SecureVoting = ({ modalOpen, modalClose, activeAccount, network }) => {
           </BoxLeft>
           <BoxMiddle>
             <VoteImpactHeading>In voting contract</VoteImpactHeading>
-            <MkrAmt>{formatRound(activeAccount.proxy.votingPower, 4)}</MkrAmt>
+            <MkrAmt>
+              {formatRound(
+                Number(activeAccount.proxy.votingPower / 10 ** 18),
+                4
+              )}
+            </MkrAmt>
           </BoxMiddle>
           <BoxRight>
             <VoteImpactHeading> Linked address </VoteImpactHeading>

@@ -54,8 +54,8 @@ const Onboarding = ({ open, step, state, ...props }) => {
       zIndex="2"
       bg="backgroundGrey"
       position="fixed"
-      height="25%"
-      width="25%"
+      height="100%"
+      width="100%"
       top="0"
       left="0"
     >
@@ -78,7 +78,16 @@ const Onboarding = ({ open, step, state, ...props }) => {
           open={open}
           onboarding={onboardingProps}
         />
-      ) : null}
+      ) : (
+        <SingleWalletOnboarding
+          step={step}
+          open={open}
+          onboarding={onboardingProps}
+        />
+      )
+      //forced single wallet
+      //null
+      }
     </Background>
   );
 };

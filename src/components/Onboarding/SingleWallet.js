@@ -31,11 +31,10 @@ class SingleWalletApprovals extends React.Component {
   async componentDidMount() {
     const { hasInfIouApproval, hasInfMkrApproval } = this.props.singleWallet;
 
-    if (hasInfIouApproval && hasInfMkrApproval) {
-      await this.props.addSingleWalletAccount(this.props.singleWallet);
-      this.props.onComplete();
-    } else if (hasInfMkrApproval && !hasInfIouApproval)
-      this.toGrantIouPermissions();
+    //if (hasInfIouApproval && hasInfMkrApproval) {
+    //  await this.props.addSingleWalletAccount(this.props.singleWallet);
+    //  this.props.onComplete();
+    if (hasInfMkrApproval && !hasInfIouApproval) this.toGrantIouPermissions();
     else this.toGrantMkrPermissions();
   }
 

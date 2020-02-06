@@ -175,14 +175,22 @@ export const sendVote = proposalAddress => async (dispatch, getState) => {
   slate.push(proposalAddress);
 
   let voteExec;
-  if (activeAccount.singleWallet) {
-    console.log('voteExec', sortBytesArray(slate), slate);
-    voteExec = await Vote(sortBytesArray(slate));
-  } else {
-    //voteExec = window.maker
-    //  .service('voteProxy')
-    //  .voteExec(activeAccount.proxy.address, sortBytesArray(slate));
-  }
+  //if (activeAccount.singleWallet) {
+  console.log(
+    'voteExec',
+    sortBytesArray(slate),
+    slate,
+    'proxy address',
+    activeAccount.proxy.address,
+    activeAccount
+  );
+
+  voteExec = await Vote(activeAccount.proxy.address, sortBytesArray(slate));
+  //} else {
+  //voteExec = window.maker
+  //  .service('voteProxy')
+  //  .voteExec(activeAccount.proxy.address, sortBytesArray(slate));
+  //}
 
   const { accounts } = getState();
   console.log('got Tx object', voteExec, 'getState accounts', accounts);
@@ -216,13 +224,16 @@ export const withdrawVote = proposalAddress => async (dispatch, getState) => {
   );
 
   let voteExec;
-  if (activeAccount.singleWallet) {
-    voteExec = await Vote(sortBytesArray(filteredSlate));
-  } else {
-    voteExec = window.maker
-      .service('voteProxy')
-      .voteExec(activeAccount.proxy.address, sortBytesArray(filteredSlate));
-  }
+  //if (activeAccount.singleWallet) {
+  voteExec = await Vote(
+    activeAccount.proxy.address,
+    sortBytesArray(filteredSlate)
+  );
+  //} else {
+  //  voteExec = window.maker
+  //    .service('voteProxy')
+  //    .voteExec(activeAccount.proxy.address, sortBytesArray(filteredSlate));
+  //}
 
   return handleTx({
     prefix: 'WITHDRAW',

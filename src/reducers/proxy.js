@@ -76,7 +76,7 @@ const handleTx = ({
   acctType
 }) =>
   new Promise(resolve => {
-    console.log('checking txObject', txObject);
+    console.log('checking txObject', txObject, 'prefix', prefix);
 
     let ret = window.tronWeb.trx.getTransaction(txObject).then(r => {
       //console.log('got ret', r['ret'], r);
@@ -190,6 +190,24 @@ export const approveLink = ({ hot, cold }) => (dispatch, getState) => {
   });
 };
 
+const _toFixed = x => {
+  if (Math.abs(x) < 1.0) {
+    var e = parseInt(x.toString().split('e-')[1]);
+    if (e) {
+      x *= Math.pow(10, e - 1);
+      x = '0.' + new Array(e).join('0') + x.toString().substring(2);
+    }
+  } else {
+    var e = parseInt(x.toString().split('+')[1]);
+    if (e > 20) {
+      e -= 20;
+      x /= Math.pow(10, e);
+      x += new Array(e + 1).join('0');
+    }
+  }
+  return x;
+};
+
 export const lock = value => async (dispatch, getState) => {
   if (value === 0) return;
   //if (!useColdAccount(getState())) return;
@@ -198,46 +216,53 @@ export const lock = value => async (dispatch, getState) => {
   dispatch({ type: SEND_MKR_TO_PROXY_REQUEST, payload: value });
 
   let chief = await loadContract(mainnetAddresses['CHIEF']);
-  let voteProxy = await loadContract(mainnetAddresses['VOTE_PROXY']);
+  let voteProxy = await loadContract(account.proxy.address);
 
-  let lock;
-  if (account.singleWallet) {
-    lock = await chief
-      .lock(value)
-      .send({ shouldPollResponse: true, callValue: value });
-  } else {
-    lock = voteProxy.lock(account.proxy.address, value).send();
-  }
+  //if (account.singleWallet) {
+  //  lock = await chief
+  //    .lock(value)
+  //    .send({ shouldPollResponse: true, callValue: value });
+  //} else {
+  //  lock = voteProxy.lock(account.proxy.address, value).send();
+  //}
 
+  let x = _toFixed(Number(value * 10 ** 18)).toString();
+
+  console.log('locking value', x);
+
+  let lock = await voteProxy.lock(x).send({ shouldPollResponse: false });
   return handleTx({
     prefix: 'SEND_MKR_TO_PROXY',
     dispatch,
     txObject: lock,
-    successPayload: value,
+    successPayload: x,
     acctType: account.type
   }).then(success => success && dispatch(initApprovalsFetch()));
 };
 
-export const free = value => (dispatch, getState) => {
+export const free = value => async (dispatch, getState) => {
   if (value <= 0) return;
   const account = getAccount(getState(), window.tronWeb.defaultAddress.hex);
+  //let chief = await loadContract(mainnetAddresses['CHIEF']);
+  let voteProxy = await loadContract(account.proxy.address);
+  let x = _toFixed(Number(value * 10 ** 18)).toString();
 
-  let free;
-  if (account.singleWallet) {
-    free = window.maker.service('chief').free(value);
-  } else {
-    free = window.maker.service('voteProxy').free(account.proxy.address, value);
-  }
+  //if (account.singleWallet) {
+  //  free = window.maker.service('chief').free(value);
+  //} else {
+  let free = await voteProxy.free(x).send({ shouldPollResponse: false });
+  //}
 
-  dispatch({ type: WITHDRAW_MKR_REQUEST, payload: value });
+  dispatch({ type: WITHDRAW_MKR_REQUEST, payload: x });
   return handleTx({
     prefix: 'WITHDRAW_MKR',
     dispatch,
     txObject: free,
-    successPayload: value,
+    successPayload: x,
     acctType: account.type
   }).then(success => success && dispatch(initApprovalsFetch()));
 };
+
 export const freeAll = value => (dispatch, getState) => {
   if (value <= 0) return;
   const account = getAccount(getState(), window.tronWeb.defaultAddress.hex);
@@ -349,18 +374,18 @@ export const iouApproveSingleWallet = () => async (dispatch, getState) => {
   }).then(success => success && dispatch(addSingleWalletAccount(account)));
 };
 
-export const mkrApproveProxy = () => (dispatch, getState) => {
+export const mkrApproveProxy = () => async (dispatch, getState) => {
   if (!useColdAccount(getState())) return;
   const account = getAccount(getState(), window.tronWeb.defaultAddress.hex);
   let proxyAddress = account.proxy.address;
-  if (!proxyAddress) {
-    //if proxy address not stored in accounts yet, then it should be in proxy store
-    proxyAddress = getState().proxy.proxyAddress;
-  }
-  const giveProxyAllowance = null;
-  //window.maker
-  //.getToken(MKR)
-  //.approveUnlimited(proxyAddress);
+  //if (!proxyAddress) {
+  //if proxy address not stored in accounts yet, then it should be in proxy store
+  proxyAddress = account.defaultProxy; //getState().proxy.proxyAddress;
+  //}
+  let x = await loadContract(mainnetAddresses['IOU']);
+  const giveProxyAllowance = await x
+    .approve(proxyAddress, Number(100000000000).toString())
+    .send();
 
   dispatch({ type: MKR_APPROVE_REQUEST });
   return handleTx({

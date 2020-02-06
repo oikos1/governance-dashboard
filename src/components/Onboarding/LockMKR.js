@@ -73,6 +73,8 @@ class LockMKR extends React.Component {
   };
 
   toLockMKR = () => {
+    console.log('nulled');
+    return;
     this.props.lock(parseFloat(this.state.votingMKR));
     this.setState({
       step: 2,
@@ -145,8 +147,8 @@ class LockMKR extends React.Component {
                 <div>
                   <Label mb="s">Available MKR</Label>
                   <div>
-                    {[this.state.storageWallet.mkrBalance.toNumber()]} MKR
-                    available to vote
+                    {[Number(this.state.storageWallet.mkrBalance) / 10 ** 18]}{' '}
+                    MKR available to vote
                   </div>
                 </div>
 
@@ -214,7 +216,8 @@ class LockMKR extends React.Component {
                       </Link>
                     </Box>
                     <Box gridRow={['2', '1']} gridColumn={['1/3', '3']}>
-                      {this.state.storageWallet.mkrBalance.toNumber()} MKR
+                      {[Number(this.state.storageWallet.mkrBalance) / 10 ** 18]}{' '}
+                      MKR
                     </Box>
                     <Flex justifyContent="flex-end">
                       {this.props.singleWallet ? (

@@ -2,6 +2,7 @@ import round from 'lodash.round';
 
 import { createReducer } from '../utils/redux';
 import { add, toNum } from '../utils/misc';
+import { getApprovalCount } from '../services/Chief';
 
 // Constants ----------------------------------------------
 
@@ -19,16 +20,15 @@ export const initApprovalsFetch = () => (dispatch, getState) => {
   dispatch({ type: APPROVALS_REQUEST });
   Promise.all(
     proposals.map(({ source }) => {
-      console.log('got source', source);
-      //toNum(window.maker.service('chief').getApprovalCount(source)).then(
-      //  approvals => ({
-      //    [source]: approvals
-      //  })
-      //)
+      //console.log('got source', source);
+      return getApprovalCount(source).then(approvals => ({
+        [source]: approvals
+      }));
     })
   )
     .then(approvals => {
-      /*let total = 0;
+      console.log('got approvals', approvals);
+      let total = 0;
       const approvalsObj = {};
       for (let approval of approvals) {
         const [address, amt] = Object.entries(approval)[0];
@@ -36,7 +36,7 @@ export const initApprovalsFetch = () => (dispatch, getState) => {
         approvalsObj[address.toLowerCase()] = round(amt, 2);
       }
       total = round(total, 2);
-      dispatch({ type: APPROVALS_SUCCESS, payload: { approvalsObj, total } });*/
+      dispatch({ type: APPROVALS_SUCCESS, payload: { approvalsObj, total } });
     })
     .catch(error => {
       // TODO: notify user or throw to a fallback component

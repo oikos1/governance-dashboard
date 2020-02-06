@@ -259,6 +259,7 @@ export const calculateTimeSpan = (earlier, later) => {
 };
 
 export const check = async res => {
+  console.log('check got res', res);
   if (!res.ok) {
     throw new Error(
       `unable to fetch topics: ${res.status} - ${await res.text()}`

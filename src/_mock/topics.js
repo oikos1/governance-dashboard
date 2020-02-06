@@ -62,16 +62,16 @@ export default [
     topic: 'Example Executive Vote',
     verified: true,
     govVote: false,
-    active: false,
-    end_timestamp: 1535606394000,
+    active: true,
+    end_timestamp: 1604275200 * 1000,
     proposals: [
       {
         key: 'governance-fee-raise',
-        date: '2018-12-12T00:00:00.000Z',
+        date: '2020-11-12T00:00:00.000Z',
         end_approvals: 72402.7,
         source:
           '{"mainnet":"TYqZQ9tdoD2iVNav6kkL9jXCFJosykDjbA","kovan":"0x0c0fC0952790A96D60CD82cA865C7bb1233477C3","ganache":"0x0c0fC0952790A96D60CD82cA865C7bb1233477C3"}',
-        end_timestamp: 1535606394000,
+        end_timestamp: 1604275200 * 1000,
         proposal_blurb:
           'Vote for this proposal to approve an increase in the governance fee to 13.337% per year',
         title: 'Raise the governance fee to 13.337% / year',

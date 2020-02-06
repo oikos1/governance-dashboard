@@ -73,10 +73,15 @@ const getQueryResponse = async (serverUrl, query) => {
 
 export const pollForMetamaskChanges = () => async dispatch => {
   try {
-    await dispatch(initWeb3Accounts());
+    let x = await getQueryResponse(
+      'http://localhost:31337/getProxy?',
+      'owner=' + window.tronWeb.defaultAddress.hex
+    );
+
+    await dispatch(initWeb3Accounts(x[0].proxy));
     await dispatch(checkNetwork());
 
-    setTimeout(() => dispatch(pollForMetamaskChanges()), 10000);
+    setTimeout(() => dispatch(pollForMetamaskChanges()), 3000);
   } catch (err) {
     console.error(err);
   }

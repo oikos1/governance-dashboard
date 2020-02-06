@@ -29,7 +29,7 @@ export default ({ candidate }) => (
         {loadingApprovals ? (
           <Loader size={18} color="light_grey" background="white" />
         ) : (
-          formatRound(approvals)
+          formatRound(approvals / 10 ** 18)
         )}{' '}
         MKR
         <InSupport />

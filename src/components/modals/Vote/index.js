@@ -81,7 +81,7 @@ class Vote extends Component {
                         }}
                       >
                         <VoteImpactHeading>Current vote</VoteImpactHeading>
-                        <MkrAmt>{formatRound(approvals, 3)}</MkrAmt>
+                        <MkrAmt>{formatRound(approvals / 10 ** 18, 3)}</MkrAmt>
                       </div>
                       <div
                         style={{
@@ -149,7 +149,9 @@ class Vote extends Component {
                         <VoteImpactHeading>
                           In secure contract
                         </VoteImpactHeading>
-                        <MkrAmt>{formatRound(proxy.votingPower, 3)}</MkrAmt>
+                        <MkrAmt>
+                          {formatRound(Number(proxy.votingPower / 10 ** 18), 3)}
+                        </MkrAmt>
                       </div>
                       <div
                         style={{
@@ -160,7 +162,7 @@ class Vote extends Component {
                         }}
                       >
                         <VoteImpactHeading>Current vote</VoteImpactHeading>
-                        <MkrAmt>{formatRound(approvals, 3)}</MkrAmt>
+                        <MkrAmt>{formatRound(approvals / 10 ** 18, 3)}</MkrAmt>
                       </div>
                       <div
                         style={{
@@ -172,7 +174,12 @@ class Vote extends Component {
                       >
                         <VoteImpactHeading>After vote cast</VoteImpactHeading>
                         <MkrAmt>
-                          {formatRound(add(approvals, proxy.votingPower), 3)}
+                          {formatRound(
+                            Number(
+                              add(approvals, proxy.votingPower) / 10 ** 18
+                            ),
+                            3
+                          )}
                         </MkrAmt>
                       </div>
                     </VoteImpact>

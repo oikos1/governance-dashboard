@@ -15,8 +15,8 @@ const lift = address => {
   return this._chiefContract().lift(address);
 };
 
-export const Vote = async picks => {
-  const x = await loadContract(mainnetAddresses['CHIEF']);
+export const Vote = async (proxy, picks) => {
+  const x = await loadContract(proxy);
   //if (Array.isArray(picks))
   console.log('Vote, picks', picks);
   //return
@@ -140,14 +140,14 @@ export const getVotedSlate = async address => {
 
 export const getNumDeposits = async address => {
   const x = await loadContract(mainnetAddresses['CHIEF']);
-
   return await x.deposits(address).call();
 };
 
-export const getApprovalCount = address => {
-  return this._chiefContract()
-    .approvals(address)
-    .then(MKR.wei);
+export const getApprovalCount = async address => {
+  const x = await loadContract(mainnetAddresses['CHIEF']);
+  let n = await x.approvals(address).call();
+  console.log('getApprovalCount', n.toString());
+  return [n.toString()];
 };
 
 export const getHat = () => {

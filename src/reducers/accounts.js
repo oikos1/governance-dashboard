@@ -256,14 +256,8 @@ export const addSingleWalletAccount = account => async dispatch => {
   //.getContractAddressByName(CHIEF);
   const mkrToken = await loadContract(mainnetAddresses['GOV']); //window.maker.getToken(MKR);
   const iouToken = await loadContract(mainnetAddresses['IOU']); //window.maker.getToken('IOU');
-
+  let currProposal = [];
   //const chiefService = window.maker.service('chief');
-
-  const currProposal = (async () => {
-    const _slate = await getVotedSlate(account.address);
-    const slateAddresses = await getSlateAddresses(_slate);
-    return (slateAddresses || []).map(address => address.toLowerCase());
-  })();
 
   const votingPower = (await getNumDeposits(account.address)).toNumber();
 
@@ -285,18 +279,25 @@ export const addSingleWalletAccount = account => async dispatch => {
     linkedAccount: {}
   };
 
-  let singleWallet = null;
+  let singleWallet = true;
 
-  if (!hasProxy) {
-    singleWallet = false;
-  } else {
-    console.log('dumping two var ----------->', hasProxy, voteProxy);
+  if (hasProxy) {
+    currProposal = await (async () => {
+      const _slate = await getVotedSlate(account.defaultProxy);
+      console.log('get voted slate', _slate);
+      const slateAddresses = await getSlateAddresses(_slate);
+      return (slateAddresses || []).map(address => address.toLowerCase());
+    })();
+
+    console.log('loaded current Proposal ', currProposal);
+
+    //console.log('dumping two var ----------->', hasProxy, voteProxy);
     const votingPowerProxy = await mkrToken
       .allowance(account.address, voteProxy._hotAddress)
       .call();
     proxy = {
       address: voteProxy._hotAddress,
-      votingPower: await getNumDeposits(account.address),
+      votingPower: await getNumDeposits(voteProxy._hotAddress),
       hasInfMkrApproval: votingPowerProxy, //> MAX_UINT_ETH_BN,
       hasInfIouApproval: hasInfIouApproval,
       //mkrToken
@@ -304,7 +305,7 @@ export const addSingleWalletAccount = account => async dispatch => {
       //.then(val => val.eq(MAX_UINT_ETH_BN)),
       linkedAccount: '' // linkedAccountData()
     };
-    singleWallet = true;
+    //singleWallet = true;
   }
   /*{
             address: '',

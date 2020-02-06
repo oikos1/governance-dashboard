@@ -210,7 +210,7 @@ const VoterStatus = ({
               >
                 {({ proposalTitle, proposalSlug, noVote, topicKey }) =>
                   noVote ? (
-                    'Currently not voting'
+                    'Currently not voting-'
                   ) : (
                     <Fragment>
                       Currently voting for{' '}
@@ -226,13 +226,15 @@ const VoterStatus = ({
               </WithVote>
             </Fragment>
           ) : legacy ? (
-            'Currently not voting'
+            'Currently not voting+-'
           ) : null}
         </SmallMediumText>
       ) : (
         <SmallMediumText>
           <Strong>{'Active wallet:'}</Strong> In voting contract{' '}
-          <Black>{formatRound(account.proxy.votingPower, 4)} MKR</Black>{' '}
+          <Black>
+            {formatRound(Number(account.proxy.votingPower / 10 ** 18), 4)} MKR
+          </Black>{' '}
           {Number(account.mkrBalance) > 0 && (
             <TextButton onClick={() => modalOpen(Lock)}>Top-up</TextButton>
           )}
@@ -269,7 +271,7 @@ const VoterStatus = ({
               >
                 {({ proposalTitle, proposalSlug, noVote, topicKey }) =>
                   noVote ? (
-                    'Currently not voting'
+                    'Currently not voting--'
                   ) : (
                     <Fragment>
                       Currently voting for{' '}
@@ -285,7 +287,7 @@ const VoterStatus = ({
               </WithVote>
             </Fragment>
           ) : legacy ? (
-            'Currently not voting'
+            'Currently not voting+'
           ) : null}
         </SmallMediumText>
       )}

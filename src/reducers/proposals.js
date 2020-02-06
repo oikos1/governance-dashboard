@@ -56,13 +56,13 @@ export function getWinningProp(state, topicKey) {
 
 // Backend ------------------------------------------------
 
-const local = 'http://localhost:31337/v1';
+const local = 'http://localhost:31337';
 // const prod = 'https://content.makerfoundation.com';
 // const staging = 'https://elb.content.makerfoundation.com:444';
 const prod = 'https://cms-gov.makerfoundation.com';
 const staging = 'https://elb.cms-gov.makerfoundation.com:444';
 
-const path = 'content/governance-dashboard';
+const path = 'getProposals';
 
 // backends
 
@@ -74,7 +74,9 @@ const fetchMock = async () => {
 const fetchNetwork = async (url, network) => {
   const res = await fetch(`${url}/${path}?network=${network}`);
   await check(res);
-  return await res.json();
+  //console.log("got response", await res.json().topics)
+  let topics = await res.json();
+  return topics.topics;
 };
 
 // dispatch
