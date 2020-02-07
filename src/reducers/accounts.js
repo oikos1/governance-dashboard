@@ -286,7 +286,7 @@ export const addSingleWalletAccount = account => async dispatch => {
       const _slate = await getVotedSlate(account.defaultProxy);
       console.log('get voted slate', _slate);
       const slateAddresses = await getSlateAddresses(_slate);
-      return (slateAddresses || []).map(address => address.toLowerCase());
+      return (slateAddresses || []).map(address => window.tronWeb.address.fromHex(address.toLowerCase()));
     })();
 
     console.log('loaded current Proposal ', currProposal);
