@@ -17,12 +17,13 @@ const lift = address => {
 
 export const Vote = async (proxy, picks) => {
   const x = await loadContract(proxy);
-  //if (Array.isArray(picks))
-  console.log('Vote, picks', picks);
-  //return
-  let y = await x['vote(address[])'](picks).send();
-  return y;
-  //return this._chiefContract()['vote(bytes32)'](picks);
+  if (Array.isArray(picks)) {
+    let y = await x['vote(address[])'](picks).send();
+    return y;
+  } else {
+    let x = await x['vote(bytes32)'](picks).send();
+    return x;    
+  }
 };
 
 const lock = (amt, unit = MKR) => {
@@ -35,6 +36,9 @@ const free = (amt, unit = MKR) => {
   //return this._chiefContract().free(mkrAmt);
 };
 
+// helper for when we might call getSlateAddresses with the same slate several times
+//const memoizedGetSlateAddresses = (identity) => memoizeWith(identity, getSlateAddresses);
+  
 const getLockLogs = async () => {
   const chiefAddress = mainnetAddresses['CHIEF'];
   //const tronWebService = tronWeb; //this.get('web3');
@@ -71,37 +75,43 @@ const getLockLogs = async () => {
 
 export const getVoteTally = async () => {
   console.log('getVoteTally');
-  const voters = getLockLogs();
+  const voters = ["4174099aa06ac2ff05e44dd39e3683758ac2a43bbc"]; //getLockLogs();
 
-  //return {};
   const withDeposits = await Promise.all(
     voters.map(voter =>
-      this.getNumDeposits(voter).then(deposits => ({
+      getNumDeposits(voter).then(deposits => ({
         address: voter,
-        deposits: parseFloat(deposits)
+        deposits: parseInt(deposits.toString())/(10**18)
       }))
     )
   );
 
+    console.log("dumping withDeposits", await withDeposits);
+
+
   const withSlates = await Promise.all(
     withDeposits.map(addressDeposit =>
-      this.getVotedSlate(addressDeposit.address).then(slate => ({
+      getVotedSlate(addressDeposit.address).then(slate => ({
         ...addressDeposit,
         slate
       }))
     )
   );
+  console.log("dumping withSlates", await withSlates);
+
 
   const withVotes = await Promise.all(
     withSlates.map(withSlate =>
-      this.memoizedGetSlateAddresses(withSlate.slate).then(addresses => ({
+      getSlateAddresses(withSlate.slate).then(addresses => ({
         ...withSlate,
         votes: addresses
       }))
     )
   );
+  console.log("dumping withVotes", await withVotes);
 
   const voteTally = {};
+
   for (const voteObj of withVotes) {
     for (let vote of voteObj.votes) {
       vote = vote.toLowerCase();
@@ -119,6 +129,7 @@ export const getVoteTally = async () => {
       }
     }
   }
+
   for (const [key, value] of Object.entries(voteTally)) {
     const sortedAddresses = value.addresses.sort(
       (a, b) => b.deposits - a.deposits
@@ -126,10 +137,14 @@ export const getVoteTally = async () => {
     const approvals = voteTally[key].approvals;
     const withPercentages = sortedAddresses.map(shapedVoteObj => ({
       ...shapedVoteObj,
-      percent: ((shapedVoteObj.deposits * 100) / approvals).toFixed(2)
+      percent: ((shapedVoteObj.deposits * 100) / approvals).toFixed(2),
+      address: window.tronWeb.address.fromHex(shapedVoteObj.address)
     }));
     voteTally[key] = withPercentages;
   }
+
+  console.log('dumping voteTally', voteTally)
+
   return voteTally;
 };
 
@@ -189,6 +204,7 @@ export const getEtchSlateLogs = () => {
   });
 };
 
+
 // Internal --------------------------------------------
 
 const paddedBytes32ToAddress = hex =>
@@ -198,6 +214,7 @@ const _chiefContract = ({ web3js = false } = {}) => {
   if (web3js) return this.get('smartContract').getWeb3ContractByName(CHIEF);
   return this.get('smartContract').getContractByName(CHIEF);
 };
+
 
 /*
 import { LocalService } from '@makerdao/services-core';

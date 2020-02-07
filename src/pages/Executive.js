@@ -165,8 +165,8 @@ const LoadingWrapper = styled.div`
 `;
 
 const toChecksumAddress = address => {
-  const { toChecksumAddress } = window.maker.service('web3')._web3.utils;
-  return toChecksumAddress(address);
+  //const { toChecksumAddress } = window.maker.service('web3')._web3.utils;
+  return address; //toChecksumAddress(address);
 };
 
 function Executive({
@@ -183,7 +183,8 @@ function Executive({
   if (isNil(proposal) || isEmpty(proposal) || !isValidRoute)
     return <NotFound />;
   const { active, topicKey } = proposal;
-  const supporters = voteState[proposal.source.toLowerCase()] || null;
+  const supporters = voteState[window.tronWeb.address.toHex(proposal.source)] || null;
+  console.log("got supporters", supporters)
   return (
     <RiseUp>
       <WhiteBackground>
@@ -298,7 +299,7 @@ const reduxProps = ({ proposals, tally, accounts, metamask }, { match }) => {
   const { execSlug } = match.params;
   const proposal = proposals.find(({ title }) => toSlug(title) === execSlug);
   const isValidRoute = proposal && execSlug;
-
+  console.log("dumping reduxProps", tally.tally)
   return {
     proposal,
     voteStateFetching: tally.fetching,
