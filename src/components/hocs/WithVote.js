@@ -10,9 +10,11 @@ const WithVote = ({
   proposals = [],
   signaling
 }) => {
+
   const proposal = proposals
     .filter(({ govVote }) => govVote === !!signaling)
-    .find(({ source }) => proposalAddresses.includes(source.toLowerCase()));
+    .find(({ source }) => proposalAddresses.map(s => s.toLowerCase()).includes(source.toLowerCase()));
+
   if (proposal !== undefined)
     return children({
       proposalTitle: proposal.title,

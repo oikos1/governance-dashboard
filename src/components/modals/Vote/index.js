@@ -73,6 +73,7 @@ class Vote extends Component {
                 </StyledBlurb>
                 <WithTally candidate={proposal.address}>
                   {({ approvals }) => (
+
                     <VoteImpact>
                       <div
                         style={{
@@ -81,7 +82,7 @@ class Vote extends Component {
                         }}
                       >
                         <VoteImpactHeading>Current vote</VoteImpactHeading>
-                        <MkrAmt>{formatRound(approvals / 10 ** 18, 3)}</MkrAmt>
+                        <MkrAmt>{formatRound(approvals / (10**18), 3)}</MkrAmt>
                       </div>
                       <div
                         style={{
@@ -95,9 +96,9 @@ class Vote extends Component {
                         </VoteImpactHeading>
                         <MkrAmt>
                           {formatRound(
-                            Number(subtract(approvals, proxy.votingPower)) < 0
+                            Number(subtract(approvals/ (10**18), proxy.votingPower)) < 0
                               ? 0
-                              : subtract(approvals, proxy.votingPower),
+                              : subtract(approvals/ (10**18), proxy.votingPower),
                             3
                           )}
                         </MkrAmt>
